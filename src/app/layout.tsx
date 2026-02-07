@@ -3,13 +3,14 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Sidebar } from "@/components/layout/sidebar";
+import { MobileHeader } from "@/components/layout/mobile-header";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Poker Team Hub - The Strategist's Library",
+  title: "Ebi-Hub — Poker Team OS",
   description:
-    "High-end poker team management app for session tracking, hand review, and team analytics.",
+    "Professional poker team management: session tracking, hand review, event intelligence, and team analytics.",
 };
 
 export default function RootLayout({
@@ -33,6 +34,7 @@ export default function RootLayout({
               <Sidebar />
             </div>
             <main className="flex-1 md:ml-64">
+              <MobileHeader />
               <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 pb-20 md:pb-6">
                 {children}
               </div>

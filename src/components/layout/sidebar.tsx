@@ -68,10 +68,10 @@ export function Sidebar() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-full border border-emerald/30 text-sm font-bold text-emerald">
-              武
+              お
             </div>
             <div>
-              <p className="text-sm font-medium">武 (Takeshi)</p>
+              <p className="text-sm font-medium">おにく</p>
               <p className="text-xs text-muted-foreground">リーダー</p>
             </div>
           </div>

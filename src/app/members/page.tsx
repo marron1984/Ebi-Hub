@@ -11,7 +11,17 @@ import { formatJpy } from "@/lib/currency";
 import { cn } from "@/lib/utils";
 import { Crown, MapPin, Users, DollarSign, Clock, Target, Shield, User } from "lucide-react";
 
-const MEMBER_COLORS = ["#00FF9F", "#F59E0B", "#EF4444", "#8B5CF6"];
+const MEMBER_COLORS = [
+  "#00FF9F", // おにく
+  "#F59E0B", // タカ
+  "#EF4444", // モッチ
+  "#3B82F6", // ノセ
+  "#8B5CF6", // 便座
+  "#EC4899", // ロキソニン陸斗
+  "#14B8A6", // だーふく
+  "#F97316", // コロッケ
+  "#06B6D4", // ぱいぱんコニー
+];
 
 type RoleFilter = "all" | "leader" | "member";
 
@@ -116,7 +126,7 @@ export default function MembersPage() {
       </div>
 
       {/* Member Cards Grid */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredPlayers.map((player) => {
           const colorIndex = mockPlayers.findIndex((p) => p.id === player.id);
           const color = MEMBER_COLORS[colorIndex] ?? MEMBER_COLORS[0];
@@ -129,6 +139,7 @@ export default function MembersPage() {
 
           const isOnFire = activity?.status === "on-fire";
           const isAdmin = player.role === "leader";
+          const isKadoamRep = player.name === "ロキソニン陸斗";
 
           return (
             <Card key={player.id} className="border bg-card">
@@ -146,13 +157,21 @@ export default function MembersPage() {
                   </div>
 
                   <div className="min-w-0 flex-1 space-y-1.5">
-                    {/* Name + Crown */}
+                    {/* Name + Crown + Kadoma Badge */}
                     <div className="flex items-center gap-2">
                       <CardTitle className="text-base">
                         {player.name}
                       </CardTitle>
                       {isAdmin && (
                         <Crown className="h-4 w-4 shrink-0 text-gold" />
+                      )}
+                      {isKadoamRep && (
+                        <Badge
+                          variant="outline"
+                          className="border-pink-500/50 bg-pink-500/10 text-[10px] text-pink-400"
+                        >
+                          門真代表
+                        </Badge>
                       )}
                     </div>
 

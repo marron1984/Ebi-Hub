@@ -7,17 +7,16 @@ import {
   ClipboardList,
   Plus,
   Users,
-  BookOpen,
-  Calculator,
+  Calendar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
   { name: "戦績", href: "/dashboard", icon: LayoutDashboard },
+  { name: "イベント", href: "/events", icon: Calendar },
   { name: "記録", href: "/sessions/new", icon: Plus },
   { name: "HH", href: "/hands", icon: ClipboardList },
-  { name: "分配", href: "/staking", icon: Calculator },
-  { name: "チーム", href: "/team", icon: Users },
+  { name: "チーム", href: "/members", icon: Users },
 ];
 
 export function MobileNav() {

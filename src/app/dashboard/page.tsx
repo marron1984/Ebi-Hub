@@ -30,9 +30,10 @@ import {
 import type { PokerCurrency } from "@/lib/currency";
 import { formatDuration } from "@/lib/utils";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import type { GameType, Venue } from "@/types/poker";
 import { OSAKA_SPOTS } from "@/lib/poker-spots";
+import { calculateCountdown } from "@/lib/intelligence";
 
 export default function DashboardPage() {
   const [gameFilter, setGameFilter] = useState<GameType | "all">("all");
@@ -99,6 +100,25 @@ export default function DashboardPage() {
     return acc;
   }, {});
 
+  // ---------- Tournament data with countdowns ----------
+  const now = useMemo(() => new Date(), []);
+
+  const registrationOpenTournaments = mockTournaments.filter(
+    (t) => t.status === "registration_open",
+  );
+  const upcomingTournaments = mockTournaments.filter(
+    (t) => t.status === "upcoming",
+  );
+
+  const tournamentCountdowns = useMemo(
+    () =>
+      upcomingTournaments.map((t) => ({
+        tournament: t,
+        countdown: calculateCountdown(t.startDate, now),
+      })),
+    [now],
+  );
+
   return (
     <div className="space-y-6">
       {/* ===== Header ===== */}
@@ -145,6 +165,197 @@ export default function DashboardPage() {
           </Select>
         </div>
       </div>
+
+      {/* ============================================================ */}
+      {/* ===== TODAY'S MAJOR TOURNAMENTS & OSAKA EVENTS (TOP) ===== */}
+      {/* ============================================================ */}
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <Calendar className="h-5 w-5 text-emerald" />
+            <h2 className="text-lg font-bold tracking-tight">
+              今日の大型大会 &amp; 大阪イベント
+            </h2>
+            {registrationOpenTournaments.length > 0 && (
+              <span className="flex items-center gap-1 rounded-full border border-emerald/30 bg-emerald/10 px-2.5 py-0.5 text-[10px] font-bold text-emerald">
+                <Radio className="h-2.5 w-2.5 animate-pulse" />
+                LIVE
+              </span>
+            )}
+          </div>
+          <Link
+            href="/events"
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-emerald transition-colors"
+          >
+            全イベント <ChevronRight className="h-3 w-3" />
+          </Link>
+        </div>
+
+        {/* Registration-open tournaments — neon glow border */}
+        {registrationOpenTournaments.length > 0 && (
+          <div className="space-y-3 mb-4">
+            {registrationOpenTournaments.map((t) => (
+              <div
+                key={t.id}
+                className="relative rounded-md border p-4 bg-card animate-in fade-in"
+                style={{
+                  borderColor: `${t.accentColor}66`,
+                  borderLeftWidth: 3,
+                  borderLeftColor: t.accentColor,
+                  boxShadow: "none",
+                }}
+              >
+                {/* Animated neon border glow via pseudo-element trick using outline */}
+                <div
+                  className="pointer-events-none absolute inset-0 rounded-md animate-pulse"
+                  style={{
+                    outline: `1px solid ${t.accentColor}40`,
+                    outlineOffset: "1px",
+                  }}
+                />
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Zap className="h-4 w-4" style={{ color: t.accentColor }} />
+                  <span className="text-sm font-bold">{t.name}</span>
+                  <span
+                    className="ml-auto flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold"
+                    style={{
+                      borderColor: `${t.accentColor}66`,
+                      color: t.accentColor,
+                    }}
+                  >
+                    <Radio className="h-2 w-2 animate-pulse" />
+                    レジスト受付中
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />
+                    {t.spotName}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    締切 {t.registrationEnd?.split("T")[1]}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <DollarSign className="h-3 w-3" />
+                    ¥{t.buyInJpy.toLocaleString()}
+                  </span>
+                  {t.guaranteeJpy && (
+                    <span className="font-number text-emerald">
+                      GTD ¥{t.guaranteeJpy.toLocaleString()}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Upcoming major tournaments with countdown */}
+        {tournamentCountdowns.length > 0 && (
+          <div className="space-y-2 mb-4">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+              今後の大型大会
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {tournamentCountdowns.map(({ tournament: t, countdown }) => (
+                <div
+                  key={t.id}
+                  className={cn(
+                    "rounded-md border p-3 bg-card",
+                    countdown.isUrgent && "border-crimson/40"
+                  )}
+                  style={{
+                    borderLeftWidth: 3,
+                    borderLeftColor: t.accentColor,
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="min-w-0">
+                      <span className="text-sm font-bold">{t.name}</span>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                        <MapPin className="h-3 w-3 shrink-0" />
+                        {t.spotName}
+                        <DollarSign className="h-3 w-3 shrink-0" />
+                        ¥{t.buyInJpy.toLocaleString()}
+                      </div>
+                      {t.guaranteeJpy && (
+                        <div className="text-[10px] text-emerald font-number mt-0.5">
+                          GTD ¥{t.guaranteeJpy.toLocaleString()}
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-right shrink-0 ml-3">
+                      {countdown.isUrgent ? (
+                        <span className="text-sm font-bold text-crimson">
+                          あと{countdown.hoursUntil}時間
+                        </span>
+                      ) : (
+                        <span className="text-sm font-bold text-muted-foreground">
+                          あと{countdown.daysUntil}日
+                        </span>
+                      )}
+                      <div className="text-[10px] text-muted-foreground mt-0.5">
+                        {t.startDate}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Daily events compact grid */}
+        <div>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+            本日のイベント
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {mockDailyEvents.slice(0, 8).map((e) => {
+              const typeColor =
+                e.eventType === "tournament"
+                  ? "text-emerald"
+                  : e.eventType === "freeroll"
+                    ? "text-emerald"
+                    : e.eventType === "league"
+                      ? "text-[#8B5CF6]"
+                      : "text-gold";
+              const typeLabel =
+                e.eventType === "tournament"
+                  ? "大会"
+                  : e.eventType === "cash_game"
+                    ? "キャッシュ"
+                    : e.eventType === "freeroll"
+                      ? "フリーロール"
+                      : e.eventType === "league"
+                        ? "リーグ"
+                        : "特別";
+              return (
+                <div
+                  key={e.id}
+                  className="flex items-center gap-2 rounded-md border p-2 bg-card"
+                >
+                  <span className="spot-badge">{e.spotName}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium truncate">{e.title}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {e.startTime}
+                      {e.endTime ? ` ~ ${e.endTime}` : ""}
+                    </p>
+                  </div>
+                  <Badge
+                    variant="outline"
+                    className={cn("text-[10px] shrink-0", typeColor)}
+                  >
+                    {typeLabel}
+                  </Badge>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
 
       {/* ===== Spot Filter ===== */}
       <div className="flex flex-wrap gap-1.5">
@@ -442,79 +653,6 @@ export default function DashboardPage() {
           </div>
         </CardContent>
       </Card>
-      {/* ===== Today's Events ===== */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between text-base">
-            <span className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-emerald" />
-              本日の大阪イベント
-              {mockTournaments.some((t) => t.status === "registration_open") && (
-                <span className="flex items-center gap-1 rounded-full border border-emerald/30 bg-emerald/10 px-2 py-0.5 text-[10px] font-bold text-emerald">
-                  <Radio className="h-2.5 w-2.5 animate-pulse" />
-                  LIVE
-                </span>
-              )}
-            </span>
-            <Link
-              href="/events"
-              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-emerald transition-colors"
-            >
-              全イベント <ChevronRight className="h-3 w-3" />
-            </Link>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {/* Registration-open tournaments */}
-          {mockTournaments
-            .filter((t) => t.status === "registration_open")
-            .map((t) => (
-              <div
-                key={t.id}
-                className="mb-3 rounded-md border p-3"
-                style={{ borderColor: `${t.accentColor}66`, borderLeftWidth: 3, borderLeftColor: t.accentColor }}
-              >
-                <div className="flex items-center gap-2 mb-1">
-                  <Zap className="h-3.5 w-3.5" style={{ color: t.accentColor }} />
-                  <span className="text-sm font-bold">{t.name}</span>
-                  <span className="ml-auto flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-bold" style={{ borderColor: `${t.accentColor}66`, color: t.accentColor }}>
-                    <Radio className="h-2 w-2 animate-pulse" />
-                    レジスト受付中
-                  </span>
-                </div>
-                <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{t.spotName}</span>
-                  <span className="flex items-center gap-1"><Clock className="h-3 w-3" />締切 {t.registrationEnd?.split("T")[1]}</span>
-                  <span className="flex items-center gap-1"><DollarSign className="h-3 w-3" />¥{t.buyInJpy.toLocaleString()}</span>
-                  {t.guaranteeJpy && <span className="font-number text-emerald">GTD ¥{t.guaranteeJpy.toLocaleString()}</span>}
-                </div>
-              </div>
-            ))}
-
-          {/* Daily events summary */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-            {mockDailyEvents.slice(0, 6).map((e) => {
-              const typeColor = e.eventType === "tournament" ? "text-emerald" :
-                e.eventType === "freeroll" ? "text-emerald" :
-                e.eventType === "league" ? "text-[#8B5CF6]" : "text-gold";
-              const typeLabel = e.eventType === "tournament" ? "大会" :
-                e.eventType === "cash_game" ? "キャッシュ" :
-                e.eventType === "freeroll" ? "フリーロール" :
-                e.eventType === "league" ? "リーグ" : "特別";
-              return (
-                <div key={e.id} className="flex items-center gap-2 rounded-md border p-2">
-                  <span className="spot-badge">{e.spotName}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium truncate">{e.title}</p>
-                    <p className="text-[10px] text-muted-foreground">{e.startTime}{e.endTime ? ` ~ ${e.endTime}` : ""}</p>
-                  </div>
-                  <Badge variant="outline" className={cn("text-[10px] shrink-0", typeColor)}>{typeLabel}</Badge>
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
 
       {/* ===== Activity Feed ===== */}
       <Card>
@@ -523,7 +661,7 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-0">
-            {mockActivities.slice(0, 8).map((activity, i) => {
+            {mockActivities.slice(0, 8).map((activity) => {
               const iconMap = {
                 session_start: Play,
                 session_end: Square,
@@ -536,9 +674,9 @@ export default function DashboardPage() {
               const isLoss = activity.metadata?.profitJpy !== undefined && activity.metadata.profitJpy < 0;
 
               // Relative time
-              const now = new Date("2025-02-07T18:00:00Z");
+              const refNow = new Date("2025-02-07T18:00:00Z");
               const then = new Date(activity.createdAt);
-              const diffMs = now.getTime() - then.getTime();
+              const diffMs = refNow.getTime() - then.getTime();
               const diffMin = Math.floor(diffMs / 60000);
               const diffHr = Math.floor(diffMin / 60);
               const diffDay = Math.floor(diffHr / 24);
