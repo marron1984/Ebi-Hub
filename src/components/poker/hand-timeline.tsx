@@ -12,12 +12,14 @@ import {
 } from "@/components/ui/accordion";
 import { cn, formatCurrency, renderMarkdown } from "@/lib/utils";
 import { Brain, MessageSquare } from "lucide-react";
+import { BroadcastButton } from "@/components/share/broadcast-button";
 
 const streetLabels: Record<Street, string> = {
-  preflop: "プリフロップ",
-  flop: "フロップ",
-  turn: "ターン",
-  river: "リバー",
+  preflop: "1. プリフロップ",
+  flop: "2. フロップ",
+  turn: "3. ターン",
+  river: "4. リバー",
+  showdown: "5. ショーダウン",
 };
 
 const streetColors: Record<Street, string> = {
@@ -25,6 +27,7 @@ const streetColors: Record<Street, string> = {
   flop: "bg-gold",
   turn: "bg-crimson-light",
   river: "bg-purple-500",
+  showdown: "bg-[#FF6B35]",
 };
 
 const actionColors: Record<string, string> = {
@@ -222,6 +225,17 @@ export function HandTimeline({ hand }: HandTimelineProps) {
           />
         </div>
       )}
+
+      {/* Broadcast to Team */}
+      <div className="flex items-center justify-end border-t pt-4">
+        <BroadcastButton
+          type="hand_review"
+          handId={hand.id}
+          handSummary={hand.notes || `${hand.heroPosition} — ${hand.gameType} ${hand.stakes}`}
+          profitJpy={hand.result * (hand.currency === "JPY" ? 1 : 150)}
+          tags={hand.tags}
+        />
+      </div>
     </div>
   );
 }

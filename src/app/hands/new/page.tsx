@@ -11,7 +11,8 @@ import {
 } from "@/components/ui/select";
 import { MarkdownEditor } from "@/components/poker/markdown-editor";
 import { cn } from "@/lib/utils";
-import { Save, Plus, Trash2 } from "lucide-react";
+import { Save, Plus, Trash2, Send } from "lucide-react";
+import { BroadcastButton } from "@/components/share/broadcast-button";
 import type {
   GameType, Position, Street, Rank, Suit, HandTag, Card as CardType,
 } from "@/types/poker";
@@ -25,9 +26,9 @@ const suitColors: Record<Suit, string> = {
   s: "text-foreground", h: "text-crimson", d: "text-crimson", c: "text-emerald",
 };
 
-const streets: Street[] = ["preflop", "flop", "turn", "river"];
+const streets: Street[] = ["preflop", "flop", "turn", "river", "showdown"];
 const streetLabels: Record<Street, string> = {
-  preflop: "プリフロップ", flop: "フロップ", turn: "ターン", river: "リバー",
+  preflop: "1. プリフロップ", flop: "2. フロップ", turn: "3. ターン", river: "4. リバー", showdown: "5. ショーダウン",
 };
 
 const allTags: { label: string; value: HandTag; category: "strategy" | "mental" | "review" }[] = [
@@ -115,6 +116,7 @@ export default function NewHandPage() {
     flop: { pot: "", thought: "", board: [] },
     turn: { pot: "", thought: "", board: [] },
     river: { pot: "", thought: "", board: [] },
+    showdown: { pot: "", thought: "", board: [] },
   });
   const [result, setResult] = useState("");
   const [selectedTags, setSelectedTags] = useState<HandTag[]>([]);
@@ -197,7 +199,7 @@ export default function NewHandPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {street !== "preflop" && (
+                {street !== "preflop" && street !== "showdown" && (
                   <CardSelector label="ボード" selectedCards={streetData[street].board}
                     onChange={(cards) => updateStreetData(street, "board", cards)}
                     maxCards={street === "flop" ? 3 : street === "turn" ? 4 : 5} />
@@ -219,7 +221,7 @@ export default function NewHandPage() {
             </Card>
           ))}
 
-          {activeStreets.length < 4 && (
+          {activeStreets.length < 5 && (
             <Button variant="outline" className="w-full" onClick={addStreet}>
               <Plus className="mr-2 h-4 w-4" />
               {streetLabels[streets.find((s) => !activeStreets.includes(s))!]}を追加
@@ -291,6 +293,14 @@ export default function NewHandPage() {
             <Save className="mr-2 h-4 w-4" />
             {saved ? "保存しました！" : "ハンドを保存"}
           </Button>
+
+          <BroadcastButton
+            type="hand_review"
+            handSummary={notes || `${heroPosition} — ${gameType} ${stakesVal}`}
+            profitJpy={result ? parseFloat(result) * 150 : undefined}
+            tags={selectedTags}
+            className="w-full"
+          />
         </div>
       </div>
     </div>

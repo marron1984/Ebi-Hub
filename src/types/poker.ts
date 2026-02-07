@@ -6,7 +6,7 @@ export type GameType = "NLH" | "PLO" | "PLO5" | "Mixed";
 
 export type Venue = "live" | "online";
 
-export type Street = "preflop" | "flop" | "turn" | "river";
+export type Street = "preflop" | "flop" | "turn" | "river" | "showdown";
 
 export type Action =
   | "fold"

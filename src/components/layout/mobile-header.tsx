@@ -2,6 +2,7 @@
 
 import { Spade } from "lucide-react";
 import { ThemeToggle } from "./theme-toggle";
+import { NotificationCenter } from "@/components/share/notification-center";
 
 export function MobileHeader() {
   return (
@@ -14,7 +15,10 @@ export function MobileHeader() {
           <h1 className="text-sm font-bold tracking-tight">Ebi-Hub</h1>
         </div>
       </div>
-      <ThemeToggle />
+      <div className="flex items-center gap-2">
+        <NotificationCenter />
+        <ThemeToggle />
+      </div>
     </header>
   );
 }

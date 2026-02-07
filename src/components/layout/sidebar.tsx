@@ -7,14 +7,14 @@ import {
   ClipboardList,
   Plus,
   Users,
-  UserCog,
   Spade,
   BookOpen,
-  Calculator,
   Calendar,
+  Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./theme-toggle";
+import { NotificationCenter } from "@/components/share/notification-center";
 
 const navigation = [
   { name: "ダッシュボード", href: "/dashboard", icon: LayoutDashboard },
@@ -22,9 +22,8 @@ const navigation = [
   { name: "セッション記録", href: "/sessions/new", icon: Plus },
   { name: "ハンドレビュー", href: "/hands", icon: ClipboardList },
   { name: "レンジ表", href: "/ranges", icon: BookOpen },
-  { name: "ステーキング", href: "/staking", icon: Calculator },
-  { name: "チーム", href: "/team", icon: Users },
-  { name: "メンバー管理", href: "/members", icon: UserCog },
+  { name: "資産管理", href: "/assets", icon: Wallet },
+  { name: "メンバー", href: "/members", icon: Users },
 ];
 
 export function Sidebar() {
@@ -32,14 +31,17 @@ export function Sidebar() {
 
   return (
     <aside className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r bg-card">
-      <div className="flex h-16 items-center gap-3 border-b px-6">
-        <div className="flex h-8 w-8 items-center justify-center rounded-md border border-emerald/30 bg-emerald/10 text-emerald">
-          <Spade className="h-5 w-5" />
+      <div className="flex h-16 items-center justify-between border-b px-6">
+        <div className="flex items-center gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-md border border-emerald/30 bg-emerald/10 text-emerald">
+            <Spade className="h-5 w-5" />
+          </div>
+          <div>
+            <h1 className="text-sm font-bold tracking-tight">Ebi-Hub</h1>
+            <p className="text-[10px] text-muted-foreground">Poker Team OS</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-sm font-bold tracking-tight">Ebi-Hub</h1>
-          <p className="text-[10px] text-muted-foreground">Poker Team OS</p>
-        </div>
+        <NotificationCenter />
       </div>
 
       <nav className="flex-1 space-y-1 p-4">

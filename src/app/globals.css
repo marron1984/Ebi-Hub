@@ -61,8 +61,8 @@
   --accent-foreground: #0F172A;
   --destructive: #DC2626;
   --destructive-foreground: #FFFFFF;
-  --border: #94A3B8;
-  --input: #94A3B8;
+  --border: #CBD5E1;
+  --input: #CBD5E1;
   --ring: #2563EB;
 
   --accent-main: #2563EB;
@@ -264,6 +264,21 @@ body {
   border: 1px solid rgba(139, 92, 246, 0.3);
   background: rgba(139, 92, 246, 0.1);
   color: #8B5CF6;
+}
+
+/* パッキリ: No shadows anywhere */
+* {
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+/* Animated border pulse for tournament cards */
+@keyframes pulse-border {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+.animate-pulse-border {
+  animation: pulse-border 2s ease-in-out infinite;
 }
 
 /* Spot badge */
