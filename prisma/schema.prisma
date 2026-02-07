@@ -1,0 +1,196 @@
+// ===== Ebi-Hub — Poker Team OS =====
+// Database: SQLite (local-first, portable)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ===== User (Team Member) =====
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?  @unique
+  avatar    String?
+  role      String   @default("member") // "admin" | "member"
+  status    String   @default("active") // "active" | "resting" | "on-fire" | "cooling-down"
+  joinedAt  DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  teamId          String?
+  team            Team?           @relation(fields: [teamId], references: [id])
+  primarySpotId   String?
+  primarySpot     Spot?           @relation("PrimarySpot", fields: [primarySpotId], references: [id])
+  sessions        Session[]
+  handHistories   HandHistory[]
+  opponentNotes   OpponentNote[]
+  activities      Activity[]
+  handComments    HandComment[]
+
+  // Privacy
+  privacyMode Boolean @default(false)
+}
+
+// ===== Team =====
+model Team {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members User[]
+}
+
+// ===== Poker Spot (Osaka venues) =====
+model Spot {
+  id         String  @id
+  name       String
+  shortName  String
+  area       String
+  address    String?
+  stakes     String  // JSON array: ["100/200", "200/400"]
+  gameTypes  String  // JSON array: ["NLH", "PLO"]
+  category   String  // "amusement" | "tournament" | "cash" | "online"
+  playerPool String  // "tight" | "loose" | "mixed"
+  notes      String?
+
+  // Relations
+  sessions      Session[]
+  opponentNotes OpponentNote[]
+  primaryUsers  User[]          @relation("PrimarySpot")
+}
+
+// ===== Session =====
+model Session {
+  id        String   @id @default(cuid())
+  // Date handling with 4AM offset
+  sessionDate   String   // YYYY-MM-DD (adjusted for 4AM cutoff)
+  startTime     String   // HH:MM
+  endTime       String   // HH:MM
+  startDatetime DateTime // Full ISO datetime for precise tracking
+
+  venue    String // "live" | "online"
+  location String
+  gameType String // "NLH" | "PLO" | "PLO5" | "Mixed"
+  stakes   String // "100/200", "1/2", etc.
+
+  // Amounts in original currency
+  buyIn    Float
+  cashOut  Float
+  profit   Float
+  currency String // "JPY" | "USD" | "PHP" | "KRW" | "EUR"
+
+  // JPY conversion
+  exchangeRate Float
+  buyInJpy     Float
+  cashOutJpy   Float
+  profitJpy    Float
+
+  status          String @default("OPEN") // "OPEN" | "SETTLED"
+  durationMinutes Int
+  notes           String @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  playerId String
+  player   User     @relation(fields: [playerId], references: [id])
+  spotId   String?
+  spot     Spot?    @relation(fields: [spotId], references: [id])
+
+  handHistories HandHistory[]
+
+  @@index([playerId])
+  @@index([sessionDate])
+  @@index([spotId])
+}
+
+// ===== Hand History =====
+model HandHistory {
+  id        String   @id @default(cuid())
+  date      String
+  gameType  String
+  stakes    String
+
+  heroPosition String
+  heroCards    String // JSON: [{"rank":"A","suit":"s"},...]
+  villainCards String? // JSON
+
+  streets String // JSON: StreetAction[]
+  pot     Float
+  result  Float
+  currency String @default("USD")
+
+  tags  String @default("[]") // JSON: HandTag[]
+  notes String @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  playerId  String
+  player    User     @relation(fields: [playerId], references: [id])
+  sessionId String?
+  session   Session? @relation(fields: [sessionId], references: [id])
+  comments  HandComment[]
+
+  @@index([playerId])
+  @@index([sessionId])
+}
+
+// ===== Hand Comment =====
+model HandComment {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+
+  handId   String
+  hand     HandHistory @relation(fields: [handId], references: [id])
+  playerId String
+  player   User        @relation(fields: [playerId], references: [id])
+  parentId String?     // For threaded replies
+
+  @@index([handId])
+}
+
+// ===== Opponent Note =====
+model OpponentNote {
+  id           String   @id @default(cuid())
+  opponentName String
+  tags         String   // JSON: OpponentTag[]
+  notes        String
+  stakes       String
+  lastSeen     String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  spotId    String
+  spot      Spot @relation(fields: [spotId], references: [id])
+  createdBy String
+  creator   User @relation(fields: [createdBy], references: [id])
+
+  @@index([spotId])
+}
+
+// ===== Activity Feed =====
+model Activity {
+  id        String   @id @default(cuid())
+  type      String   // "session_start" | "session_end" | "hand_review" | "opponent_note" | "comment"
+  title     String
+  detail    String?
+  metadata  String?  // JSON for extra data (sessionId, handId, etc.)
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
+}

@@ -21,6 +21,7 @@ import {
   type PokerCurrency,
 } from "@/lib/currency";
 import { OSAKA_SPOTS } from "@/lib/poker-spots";
+import { getSessionDateFromParts, isLateNightSession, calculateDuration } from "@/lib/session-date";
 import type { GameType, Venue } from "@/types/poker";
 import type { SessionStatus } from "@/lib/currency";
 
@@ -86,6 +87,11 @@ export default function NewSessionPage() {
   const cashOutJpy = isJpy ? cashOutNum : toJpy(cashOutNum, currency, rate);
   const profitJpy = profit !== null ? (isJpy ? profit : toJpy(profit, currency, rate)) : null;
 
+  // 4AM offset: if start time is before 4AM, session belongs to previous day
+  const adjustedSessionDate = startTime ? getSessionDateFromParts(sessionDate, startTime) : sessionDate;
+  const isLateNight = startTime ? isLateNightSession(startTime) : false;
+  const autoDuration = startTime && endTime ? calculateDuration(startTime, endTime) : null;
+
   // --- Handlers ---
   function handleVenueChange(v: Venue) {
     setVenue(v);
@@ -144,6 +150,9 @@ export default function NewSessionPage() {
                 <Label htmlFor="sessionDate" className="flex items-center gap-1.5">
                   <Calendar className="h-3.5 w-3.5" />
                   セッション日付
+                  {isLateNight && (
+                    <span className="late-night-badge">🌙 深夜 → {adjustedSessionDate}</span>
+                  )}
                 </Label>
                 <Input
                   id="sessionDate"
@@ -545,7 +554,18 @@ export default function NewSessionPage() {
                     <span className="text-muted-foreground">時間</span>
                     <span className="font-number font-medium">
                       {startTime || "--:--"} ~ {endTime || "--:--"}
+                      {autoDuration !== null && (
+                        <span className="text-muted-foreground ml-2">
+                          ({Math.floor(autoDuration / 60)}h{autoDuration % 60 > 0 ? `${autoDuration % 60}m` : ""})
+                        </span>
+                      )}
                     </span>
+                  </div>
+                )}
+                {isLateNight && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">4AMオフセット</span>
+                    <span className="late-night-badge">🌙 {adjustedSessionDate} に計上</span>
                   </div>
                 )}
 

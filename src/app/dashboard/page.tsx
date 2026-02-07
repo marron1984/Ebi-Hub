@@ -3,6 +3,7 @@
 import {
   DollarSign, Clock, TrendingUp, Trophy, Target, Flame,
   ArrowUpRight, ArrowDownRight, MapPin,
+  Play, Square, BookOpen, MessageSquare, Eye,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,7 +15,7 @@ import { StatsCard } from "@/components/poker/stats-card";
 import { ProfitChart } from "@/components/poker/profit-chart";
 import { SessionTable } from "@/components/poker/session-table";
 import { PrivacyToggle } from "@/components/poker/privacy-toggle";
-import { mockSessions, mockStats } from "@/lib/mock-data";
+import { mockSessions, mockStats, mockActivities } from "@/lib/mock-data";
 import {
   formatJpy,
   calculateTotalProfitJpy,
@@ -428,6 +429,68 @@ export default function DashboardPage() {
                           ? "***"
                           : `${data.originalTotal >= 0 ? "+" : ""}${info.symbol}${Math.abs(data.originalTotal).toLocaleString()}`}
                       </p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+      {/* ===== Activity Feed ===== */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">アクティビティ</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-0">
+            {mockActivities.slice(0, 8).map((activity, i) => {
+              const iconMap = {
+                session_start: Play,
+                session_end: Square,
+                hand_review: BookOpen,
+                opponent_note: Eye,
+                comment: MessageSquare,
+              };
+              const Icon = iconMap[activity.type];
+              const isProfit = activity.metadata?.profitJpy !== undefined && activity.metadata.profitJpy >= 0;
+              const isLoss = activity.metadata?.profitJpy !== undefined && activity.metadata.profitJpy < 0;
+
+              // Relative time
+              const now = new Date("2025-02-07T18:00:00Z");
+              const then = new Date(activity.createdAt);
+              const diffMs = now.getTime() - then.getTime();
+              const diffMin = Math.floor(diffMs / 60000);
+              const diffHr = Math.floor(diffMin / 60);
+              const diffDay = Math.floor(diffHr / 24);
+              const timeStr = diffDay > 0 ? `${diffDay}日前` : diffHr > 0 ? `${diffHr}時間前` : `${diffMin}分前`;
+
+              return (
+                <div key={activity.id} className="flex items-start gap-3 py-3 border-b border-border/50 last:border-0">
+                  <div className="relative mt-0.5">
+                    <div
+                      className="flex h-8 w-8 items-center justify-center rounded-full text-[10px] font-bold text-white"
+                      style={{ backgroundColor: activity.userColor }}
+                    >
+                      {activity.userInitial}
+                    </div>
+                    <div className={cn(
+                      "absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full border-2 border-background",
+                      activity.type === "session_start" ? "bg-emerald/20 text-emerald" :
+                      activity.type === "session_end" ? (isLoss ? "bg-crimson/20 text-crimson" : "bg-emerald/20 text-emerald") :
+                      "bg-muted text-muted-foreground"
+                    )}>
+                      <Icon className="h-2.5 w-2.5" />
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium truncate">{activity.userName.split(" ")[0]}</span>
+                      <span className="text-[10px] text-muted-foreground">{activity.title}</span>
+                      <span className="ml-auto text-[10px] text-muted-foreground shrink-0">{timeStr}</span>
+                    </div>
+                    {activity.detail && (
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">{activity.detail}</p>
                     )}
                   </div>
                 </div>

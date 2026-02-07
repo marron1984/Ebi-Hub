@@ -1,0 +1,466 @@
+import { PrismaClient } from "@prisma/client";
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+
+const adapter = new PrismaBetterSqlite3({ url: "file:dev.db" });
+const prisma = new PrismaClient({ adapter });
+
+async function main() {
+  console.log("🦐 Seeding Ebi-Hub database...");
+
+  // ===== Team =====
+  const team = await prisma.team.create({
+    data: {
+      id: "team-ebi",
+      name: "Ebi-Hub Osaka",
+    },
+  });
+  console.log("  ✓ Team created:", team.name);
+
+  // ===== Spots (Osaka) =====
+  const spots = [
+    {
+      id: "roots",
+      name: "ROOTS OSAKA",
+      shortName: "ROOTS",
+      area: "心斎橋",
+      stakes: JSON.stringify(["100/200", "200/400", "500/1000"]),
+      gameTypes: JSON.stringify(["NLH", "PLO"]),
+      category: "cash",
+      playerPool: "mixed",
+      notes: "大阪の定番。フロアが広く、レギュラーが多い。深夜帯はルースプレイヤーが増える。",
+    },
+    {
+      id: "poker-live",
+      name: "POKER LIVE OSAKA",
+      shortName: "PLO",
+      area: "難波",
+      stakes: JSON.stringify(["100/200", "200/400"]),
+      gameTypes: JSON.stringify(["NLH"]),
+      category: "cash",
+      playerPool: "loose",
+      notes: "初心者やカジュアルプレイヤーが多い。バリューベットが効きやすい環境。",
+    },
+    {
+      id: "ggpl",
+      name: "GGPL OSAKA",
+      shortName: "GGPL",
+      area: "梅田",
+      stakes: JSON.stringify(["100/200", "200/400", "500/1000"]),
+      gameTypes: JSON.stringify(["NLH", "PLO"]),
+      category: "cash",
+      playerPool: "mixed",
+      notes: "梅田エリアの大型店。トーナメントも定期開催。",
+    },
+    {
+      id: "blow",
+      name: "BLOW",
+      shortName: "BLOW",
+      area: "心斎橋",
+      stakes: JSON.stringify(["100/200", "200/400"]),
+      gameTypes: JSON.stringify(["NLH"]),
+      category: "amusement",
+      playerPool: "loose",
+      notes: "アミューズメント。初心者が多くテーブルセレクション次第で稼ぎやすい。",
+    },
+    {
+      id: "zeus",
+      name: "ゼウス",
+      shortName: "ゼウス",
+      area: "難波",
+      stakes: JSON.stringify(["50/100", "100/200"]),
+      gameTypes: JSON.stringify(["NLH"]),
+      category: "amusement",
+      playerPool: "loose",
+      notes: "低ステークスが中心。ビギナーフレンドリー。練習に最適。",
+    },
+    {
+      id: "universe",
+      name: "UNIVERSE",
+      shortName: "UNI",
+      area: "梅田",
+      stakes: JSON.stringify(["100/200", "200/400"]),
+      gameTypes: JSON.stringify(["NLH", "PLO"]),
+      category: "cash",
+      playerPool: "tight",
+      notes: "レギュラーが多くタイトなテーブル。エクスプロイトしにくいが良い練習環境。",
+    },
+    {
+      id: "jerrys",
+      name: "Jerrys",
+      shortName: "Jerry",
+      area: "心斎橋",
+      stakes: JSON.stringify(["100/200", "200/400"]),
+      gameTypes: JSON.stringify(["NLH"]),
+      category: "amusement",
+      playerPool: "mixed",
+      notes: "落ち着いた雰囲気。常連客とのコミュニケーションが取りやすい。",
+    },
+    {
+      id: "white",
+      name: "WHITE",
+      shortName: "WHITE",
+      area: "難波",
+      stakes: JSON.stringify(["100/200"]),
+      gameTypes: JSON.stringify(["NLH"]),
+      category: "amusement",
+      playerPool: "loose",
+      notes: "小規模だがアットホーム。週末は混雑する。",
+    },
+  ];
+
+  for (const spot of spots) {
+    await prisma.spot.create({ data: spot });
+  }
+  console.log(`  ✓ ${spots.length} Osaka spots created`);
+
+  // ===== Users =====
+  const users = [
+    {
+      id: "p1",
+      name: "武 (Takeshi)",
+      role: "admin",
+      status: "on-fire",
+      joinedAt: new Date("2024-01-15"),
+      teamId: team.id,
+      primarySpotId: "roots",
+    },
+    {
+      id: "p2",
+      name: "優希 (Yuki)",
+      role: "member",
+      status: "active",
+      joinedAt: new Date("2024-02-01"),
+      teamId: team.id,
+      primarySpotId: "ggpl",
+    },
+    {
+      id: "p3",
+      name: "涼 (Ryo)",
+      role: "member",
+      status: "cooling-down",
+      joinedAt: new Date("2024-03-10"),
+      teamId: team.id,
+      primarySpotId: "poker-live",
+    },
+    {
+      id: "p4",
+      name: "陽斗 (Haruto)",
+      role: "member",
+      status: "resting",
+      joinedAt: new Date("2024-04-20"),
+      teamId: team.id,
+      primarySpotId: "blow",
+    },
+  ];
+
+  for (const user of users) {
+    await prisma.user.create({ data: user });
+  }
+  console.log(`  ✓ ${users.length} team members created`);
+
+  // ===== Sessions =====
+  const sessions = [
+    {
+      id: "s1",
+      sessionDate: "2025-02-01",
+      startTime: "20:00",
+      endTime: "02:30",
+      startDatetime: new Date("2025-02-01T20:00:00Z"),
+      venue: "live",
+      location: "ROOTS OSAKA",
+      gameType: "NLH",
+      stakes: "100/200",
+      buyIn: 300,
+      cashOut: 785,
+      profit: 485,
+      currency: "USD",
+      exchangeRate: 150,
+      buyInJpy: 45000,
+      cashOutJpy: 117750,
+      profitJpy: 72750,
+      status: "SETTLED",
+      durationMinutes: 390,
+      notes: "テーブルが非常にルースだった。バリューベットを多めに。",
+      playerId: "p1",
+      spotId: "roots",
+    },
+    {
+      id: "s2",
+      sessionDate: "2025-01-28",
+      startTime: "19:00",
+      endTime: "23:45",
+      startDatetime: new Date("2025-01-28T19:00:00Z"),
+      venue: "online",
+      location: "PokerStars",
+      gameType: "NLH",
+      stakes: "0.5/1",
+      buyIn: 200,
+      cashOut: 142,
+      profit: -58,
+      currency: "USD",
+      exchangeRate: 150,
+      buyInJpy: 30000,
+      cashOutJpy: 21300,
+      profitJpy: -8700,
+      status: "SETTLED",
+      durationMinutes: 285,
+      notes: "ティルト気味だった。ブレイクをもっと取るべきだった。",
+      playerId: "p1",
+    },
+    {
+      id: "s5",
+      sessionDate: "2025-01-18",
+      startTime: "20:00",
+      endTime: "04:00",
+      startDatetime: new Date("2025-01-18T20:00:00Z"),
+      venue: "live",
+      location: "GGPL OSAKA",
+      gameType: "NLH",
+      stakes: "200/400",
+      buyIn: 500,
+      cashOut: 1450,
+      profit: 950,
+      currency: "USD",
+      exchangeRate: 150,
+      buyInJpy: 75000,
+      cashOutJpy: 217500,
+      profitJpy: 142500,
+      status: "SETTLED",
+      durationMinutes: 480,
+      notes: "キープレイヤーのリークを特定。3BETレンジを広げて成功。",
+      playerId: "p1",
+      spotId: "ggpl",
+    },
+    {
+      id: "s6",
+      sessionDate: "2025-01-15",
+      startTime: "19:30",
+      endTime: "00:30",
+      startDatetime: new Date("2025-01-15T19:30:00Z"),
+      venue: "live",
+      location: "POKER LIVE OSAKA",
+      gameType: "NLH",
+      stakes: "100/200",
+      buyIn: 300,
+      cashOut: 195,
+      profit: -105,
+      currency: "USD",
+      exchangeRate: 150,
+      buyInJpy: 45000,
+      cashOutJpy: 29250,
+      profitJpy: -15750,
+      status: "SETTLED",
+      durationMinutes: 300,
+      notes: "クーラーが多かった。セットオーバーセットで大きくロスト。",
+      playerId: "p1",
+      spotId: "poker-live",
+    },
+    {
+      id: "s8",
+      sessionDate: "2025-01-08",
+      startTime: "20:00",
+      endTime: "01:00",
+      startDatetime: new Date("2025-01-08T20:00:00Z"),
+      venue: "live",
+      location: "BLOW",
+      gameType: "NLH",
+      stakes: "100/200",
+      buyIn: 300,
+      cashOut: 520,
+      profit: 220,
+      currency: "USD",
+      exchangeRate: 150,
+      buyInJpy: 45000,
+      cashOutJpy: 78000,
+      profitJpy: 33000,
+      status: "SETTLED",
+      durationMinutes: 300,
+      notes: "ポジションを意識したプレイが奏功。",
+      playerId: "p1",
+      spotId: "blow",
+    },
+    {
+      id: "s11",
+      sessionDate: "2024-12-28",
+      startTime: "20:00",
+      endTime: "02:00",
+      startDatetime: new Date("2024-12-28T20:00:00Z"),
+      venue: "live",
+      location: "Jerrys",
+      gameType: "NLH",
+      stakes: "100/200",
+      buyIn: 30000,
+      cashOut: 52000,
+      profit: 22000,
+      currency: "JPY",
+      exchangeRate: 1,
+      buyInJpy: 30000,
+      cashOutJpy: 52000,
+      profitJpy: 22000,
+      status: "SETTLED",
+      durationMinutes: 360,
+      notes: "円建てライブ。テーブルのレベルが低く、安定して勝てた。",
+      playerId: "p1",
+      spotId: "jerrys",
+    },
+  ];
+
+  for (const session of sessions) {
+    await prisma.session.create({ data: session });
+  }
+  console.log(`  ✓ ${sessions.length} sessions created`);
+
+  // ===== Opponent Notes =====
+  const opponentNotes = [
+    {
+      opponentName: "山田さん",
+      spotId: "roots",
+      tags: JSON.stringify(["CALLING_STATION", "WEAK_POSTFLOP"]),
+      notes: "プリフロップは広くコール。フロップ以降はペアがないと降りる。2バレルで落ちやすい。",
+      stakes: "100/200",
+      lastSeen: "2025-02-01",
+      createdBy: "p1",
+    },
+    {
+      opponentName: "Kenさん",
+      spotId: "roots",
+      tags: JSON.stringify(["REG", "TAG", "POSITIONAL_AWARE"]),
+      notes: "堅いレギュラー。IPからのCBET頻度が高い。OOPではチェックレイズが多い。3BETレンジは狭い。",
+      stakes: "200/400",
+      lastSeen: "2025-01-25",
+      createdBy: "p1",
+    },
+    {
+      opponentName: "マサ",
+      spotId: "poker-live",
+      tags: JSON.stringify(["FISH", "TILT_PRONE"]),
+      notes: "ルースパッシブ。大きなポットを負けるとティルト気味になる。ティルト時はブラフキャッチが増える。",
+      stakes: "100/200",
+      lastSeen: "2025-01-28",
+      createdBy: "p3",
+    },
+    {
+      opponentName: "タツヤ",
+      spotId: "ggpl",
+      tags: JSON.stringify(["LAG", "BLUFF_HEAVY", "OVERBET_FREQ"]),
+      notes: "アグレッシブなLAG。リバーのオーバーベットが多いがブラフ頻度も高い。コールダウンが有効。",
+      stakes: "200/400",
+      lastSeen: "2025-02-03",
+      createdBy: "p2",
+    },
+    {
+      opponentName: "ユウキ先輩",
+      spotId: "blow",
+      tags: JSON.stringify(["NITS", "SLOW_PLAY_HEAVY"]),
+      notes: "極端にタイト。プリフロップのレンジが非常に狭い。レイズにはモンスター警戒。スロープレイ多用。",
+      stakes: "100/200",
+      lastSeen: "2025-01-20",
+      createdBy: "p4",
+    },
+  ];
+
+  for (const note of opponentNotes) {
+    await prisma.opponentNote.create({ data: note });
+  }
+  console.log(`  ✓ ${opponentNotes.length} opponent notes created`);
+
+  // ===== Activity Feed =====
+  const activities = [
+    {
+      type: "session_end",
+      title: "セッション終了",
+      detail: "ROOTS OSAKA — +¥72,750 (6.5時間)",
+      metadata: JSON.stringify({ sessionId: "s1", profitJpy: 72750 }),
+      userId: "p1",
+      createdAt: new Date("2025-02-02T02:30:00Z"),
+    },
+    {
+      type: "hand_review",
+      title: "ハンドレビュー投稿",
+      detail: "AKs 3BETポット — バリューライン成功",
+      metadata: JSON.stringify({ handId: "h1", tags: ["VALUE_BET", "3BET"] }),
+      userId: "p1",
+      createdAt: new Date("2025-02-02T10:00:00Z"),
+    },
+    {
+      type: "comment",
+      title: "コメント追加",
+      detail: "「フロップのCBサイズは2/3より1/2の方がGTO的には良いかも」",
+      metadata: JSON.stringify({ handId: "h1", commentId: "c1" }),
+      userId: "p2",
+      createdAt: new Date("2025-02-02T10:00:00Z"),
+    },
+    {
+      type: "opponent_note",
+      title: "相手メモ更新",
+      detail: "タツヤ @ GGPL — LAG, ブラフ多い",
+      metadata: JSON.stringify({ opponentName: "タツヤ", spotId: "ggpl" }),
+      userId: "p2",
+      createdAt: new Date("2025-02-03T15:00:00Z"),
+    },
+    {
+      type: "session_start",
+      title: "セッション開始",
+      detail: "GGPL OSAKA — NLH 200/400",
+      metadata: JSON.stringify({ spotId: "ggpl", stakes: "200/400" }),
+      userId: "p1",
+      createdAt: new Date("2025-01-18T20:00:00Z"),
+    },
+    {
+      type: "session_end",
+      title: "セッション終了",
+      detail: "GGPL OSAKA — +¥142,500 (8時間)",
+      metadata: JSON.stringify({ sessionId: "s5", profitJpy: 142500 }),
+      userId: "p1",
+      createdAt: new Date("2025-01-19T04:00:00Z"),
+    },
+    {
+      type: "hand_review",
+      title: "ハンドレビュー投稿",
+      detail: "QJh ナッツフラッシュ — スロープレイ成功",
+      metadata: JSON.stringify({ handId: "h2", tags: ["SLOW_PLAY", "GREAT_PLAY"] }),
+      userId: "p1",
+      createdAt: new Date("2025-02-02T14:00:00Z"),
+    },
+    {
+      type: "session_end",
+      title: "セッション終了",
+      detail: "POKER LIVE OSAKA — -¥15,750 (5時間)",
+      metadata: JSON.stringify({ sessionId: "s6", profitJpy: -15750 }),
+      userId: "p1",
+      createdAt: new Date("2025-01-16T00:30:00Z"),
+    },
+    {
+      type: "comment",
+      title: "コメント追加",
+      detail: "「ターンのスロープレイは最高の判断」",
+      metadata: JSON.stringify({ handId: "h2", commentId: "c4" }),
+      userId: "p4",
+      createdAt: new Date("2025-02-02T12:00:00Z"),
+    },
+    {
+      type: "session_start",
+      title: "セッション開始",
+      detail: "BLOW — NLH 100/200",
+      metadata: JSON.stringify({ spotId: "blow", stakes: "100/200" }),
+      userId: "p4",
+      createdAt: new Date("2025-02-07T21:00:00Z"),
+    },
+  ];
+
+  for (const activity of activities) {
+    await prisma.activity.create({ data: activity });
+  }
+  console.log(`  ✓ ${activities.length} activity feed entries created`);
+
+  console.log("\n🦐 Ebi-Hub seed complete!");
+}
+
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

@@ -246,3 +246,70 @@ export function getDefaultStakes(currency: PokerCurrency): string[] {
     case "EUR": return ["0.5/1", "1/2", "2/5", "5/10"];
   }
 }
+
+// ===== 日本円に両替 (Convert to JPY) =====
+
+export interface ConversionResult {
+  originalAmount: number;
+  originalCurrency: PokerCurrency;
+  jpyAmount: number;
+  rate: number;
+  rateSource: "manual" | "default";
+  convertedAt: string; // ISO datetime
+}
+
+/**
+ * 日本円に両替 — Convert an amount to JPY using the provided or default rate.
+ * Returns a ConversionResult with full audit trail.
+ */
+export function convertToJpy(
+  amount: number,
+  currency: PokerCurrency,
+  manualRate?: number
+): ConversionResult {
+  const rate = manualRate ?? getRate(currency);
+  const jpyAmount = toJpy(amount, currency, rate);
+  return {
+    originalAmount: amount,
+    originalCurrency: currency,
+    jpyAmount,
+    rate,
+    rateSource: manualRate !== undefined ? "manual" : "default",
+    convertedAt: new Date().toISOString(),
+  };
+}
+
+/**
+ * Settle an OPEN session: convert original currency amounts to JPY.
+ * Returns the JPY amounts and exchange rate used.
+ */
+export function settleSession(
+  buyIn: number,
+  cashOut: number,
+  currency: PokerCurrency,
+  manualRate?: number
+): {
+  buyInJpy: number;
+  cashOutJpy: number;
+  profitJpy: number;
+  exchangeRate: number;
+} {
+  const rate = manualRate ?? getRate(currency);
+  const buyInJpy = toJpy(buyIn, currency, rate);
+  const cashOutJpy = toJpy(cashOut, currency, rate);
+  return {
+    buyInJpy,
+    cashOutJpy,
+    profitJpy: cashOutJpy - buyInJpy,
+    exchangeRate: rate,
+  };
+}
+
+/** Format a conversion result for display: "¥150,000 (＄1,000 × 150.00)" */
+export function formatConversion(result: ConversionResult): string {
+  const info = POKER_CURRENCIES[result.originalCurrency];
+  if (result.originalCurrency === "JPY") {
+    return `¥${Math.abs(result.jpyAmount).toLocaleString()}`;
+  }
+  return `¥${Math.abs(result.jpyAmount).toLocaleString()} (${info.symbol}${Math.abs(result.originalAmount).toLocaleString()} × ${result.rate.toFixed(2)})`;
+}

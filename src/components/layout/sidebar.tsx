@@ -7,6 +7,7 @@ import {
   ClipboardList,
   Plus,
   Users,
+  UserCog,
   Spade,
   BookOpen,
   Calculator,
@@ -21,6 +22,7 @@ const navigation = [
   { name: "レンジ表", href: "/ranges", icon: BookOpen },
   { name: "ステーキング", href: "/staking", icon: Calculator },
   { name: "チーム", href: "/team", icon: Users },
+  { name: "メンバー管理", href: "/members", icon: UserCog },
 ];
 
 export function Sidebar() {

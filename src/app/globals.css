@@ -45,7 +45,7 @@
    Accent: Royal Blue #2563EB
    ======================================== */
 :root {
-  --background: #F8FAFC;
+  --background: #F1F5F9;
   --foreground: #0F172A;
   --card: #FFFFFF;
   --card-foreground: #0F172A;
@@ -53,16 +53,16 @@
   --popover-foreground: #0F172A;
   --primary: #2563EB;
   --primary-foreground: #FFFFFF;
-  --secondary: #F1F5F9;
+  --secondary: #E2E8F0;
   --secondary-foreground: #0F172A;
-  --muted: #F1F5F9;
+  --muted: #E2E8F0;
   --muted-foreground: #64748B;
-  --accent: #F1F5F9;
+  --accent: #E2E8F0;
   --accent-foreground: #0F172A;
   --destructive: #DC2626;
   --destructive-foreground: #FFFFFF;
-  --border: #E2E8F0;
-  --input: #E2E8F0;
+  --border: #94A3B8;
+  --input: #94A3B8;
   --ring: #2563EB;
 
   --accent-main: #2563EB;
@@ -77,9 +77,9 @@
 .dark {
   --background: #020617;
   --foreground: #F8FAFC;
-  --card: #0F172A;
+  --card: #0B1120;
   --card-foreground: #F8FAFC;
-  --popover: #0F172A;
+  --popover: #0B1120;
   --popover-foreground: #F8FAFC;
   --primary: #00FF9F;
   --primary-foreground: #020617;
@@ -251,6 +251,20 @@ body {
 
 /* Currency flag */
 .currency-flag { font-size: 1.2em; line-height: 1; }
+
+/* Late-night badge (4AM offset) */
+.late-night-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  background: rgba(139, 92, 246, 0.1);
+  color: #8B5CF6;
+}
 
 /* Spot badge */
 .spot-badge {

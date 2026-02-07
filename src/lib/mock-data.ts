@@ -584,3 +584,132 @@ export const mockMemberActivity: MemberActivity[] = [
     status: "resting",
   },
 ];
+
+// ===== Activity Feed =====
+
+export interface MockActivity {
+  id: string;
+  type: "session_start" | "session_end" | "hand_review" | "opponent_note" | "comment";
+  title: string;
+  detail?: string;
+  userName: string;
+  userInitial: string;
+  userColor: string;
+  createdAt: string;
+  metadata?: {
+    profitJpy?: number;
+    spotName?: string;
+    tags?: string[];
+  };
+}
+
+export const mockActivities: MockActivity[] = [
+  {
+    id: "act-1",
+    type: "session_end",
+    title: "セッション終了",
+    detail: "ROOTS OSAKA — +¥72,750 (6.5時間)",
+    userName: "武 (Takeshi)",
+    userInitial: "武",
+    userColor: "#00FF9F",
+    createdAt: "2025-02-07T02:30:00Z",
+    metadata: { profitJpy: 72750, spotName: "ROOTS" },
+  },
+  {
+    id: "act-2",
+    type: "hand_review",
+    title: "ハンドレビュー投稿",
+    detail: "AKs 3BETポット — バリューライン成功",
+    userName: "武 (Takeshi)",
+    userInitial: "武",
+    userColor: "#00FF9F",
+    createdAt: "2025-02-07T10:00:00Z",
+    metadata: { tags: ["VALUE_BET", "3BET"] },
+  },
+  {
+    id: "act-3",
+    type: "comment",
+    title: "コメント追加",
+    detail: "「フロップのCBサイズは2/3より1/2の方がGTO的には良いかも」",
+    userName: "優希 (Yuki)",
+    userInitial: "優",
+    userColor: "#F59E0B",
+    createdAt: "2025-02-07T11:30:00Z",
+  },
+  {
+    id: "act-4",
+    type: "opponent_note",
+    title: "相手メモ更新",
+    detail: "タツヤ @ GGPL — LAG, ブラフ多い",
+    userName: "優希 (Yuki)",
+    userInitial: "優",
+    userColor: "#F59E0B",
+    createdAt: "2025-02-06T15:00:00Z",
+    metadata: { spotName: "GGPL" },
+  },
+  {
+    id: "act-5",
+    type: "session_start",
+    title: "セッション開始",
+    detail: "GGPL OSAKA — NLH 200/400",
+    userName: "武 (Takeshi)",
+    userInitial: "武",
+    userColor: "#00FF9F",
+    createdAt: "2025-02-06T20:00:00Z",
+    metadata: { spotName: "GGPL" },
+  },
+  {
+    id: "act-6",
+    type: "session_end",
+    title: "セッション終了",
+    detail: "GGPL OSAKA — +¥142,500 (8時間)",
+    userName: "武 (Takeshi)",
+    userInitial: "武",
+    userColor: "#00FF9F",
+    createdAt: "2025-02-06T04:00:00Z",
+    metadata: { profitJpy: 142500, spotName: "GGPL" },
+  },
+  {
+    id: "act-7",
+    type: "hand_review",
+    title: "ハンドレビュー投稿",
+    detail: "QJh ナッツフラッシュ — スロープレイ成功",
+    userName: "武 (Takeshi)",
+    userInitial: "武",
+    userColor: "#00FF9F",
+    createdAt: "2025-02-05T14:00:00Z",
+    metadata: { tags: ["SLOW_PLAY", "GREAT_PLAY"] },
+  },
+  {
+    id: "act-8",
+    type: "session_end",
+    title: "セッション終了",
+    detail: "POKER LIVE OSAKA — -¥15,750 (5時間)",
+    userName: "涼 (Ryo)",
+    userInitial: "涼",
+    userColor: "#EF4444",
+    createdAt: "2025-02-05T00:30:00Z",
+    metadata: { profitJpy: -15750, spotName: "PLO" },
+  },
+  {
+    id: "act-9",
+    type: "session_start",
+    title: "セッション開始",
+    detail: "BLOW — NLH 100/200",
+    userName: "陽斗 (Haruto)",
+    userInitial: "陽",
+    userColor: "#8B5CF6",
+    createdAt: "2025-02-04T21:00:00Z",
+    metadata: { spotName: "BLOW" },
+  },
+  {
+    id: "act-10",
+    type: "comment",
+    title: "コメント追加",
+    detail: "「ターンのスロープレイは最高の判断」",
+    userName: "陽斗 (Haruto)",
+    userInitial: "陽",
+    userColor: "#8B5CF6",
+    createdAt: "2025-02-04T12:00:00Z",
+  },
+];
