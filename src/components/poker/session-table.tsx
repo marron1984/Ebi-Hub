@@ -8,9 +8,10 @@ import { MapPin, Clock, Globe, Building2 } from "lucide-react";
 
 interface SessionTableProps {
   sessions: Session[];
+  privacy?: boolean;
 }
 
-export function SessionTable({ sessions }: SessionTableProps) {
+export function SessionTable({ sessions, privacy = false }: SessionTableProps) {
   const sortedSessions = [...sessions].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   );
@@ -39,9 +40,12 @@ export function SessionTable({ sessions }: SessionTableProps) {
                   ) : (
                     <Globe className="mr-1 h-3 w-3" />
                   )}
-                  {session.venue === "live" ? "Live" : "Online"}
+                  {session.venue === "live" ? "ライブ" : "オンライン"}
                 </Badge>
                 <Badge variant="outline">{session.gameType}</Badge>
+                {session.currency === "JPY" && (
+                  <Badge variant="outline" className="text-[10px]">¥</Badge>
+                )}
               </div>
               <div className="flex items-center gap-3 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
@@ -59,9 +63,11 @@ export function SessionTable({ sessions }: SessionTableProps) {
             {/* Right: P&L */}
             <div className="flex items-center gap-4">
               <div className="text-right">
-                <p className="text-xs text-muted-foreground">Buy-in / Cash-out</p>
+                <p className="text-xs text-muted-foreground">バイイン / キャッシュアウト</p>
                 <p className="font-number text-sm">
-                  ${session.buyIn.toLocaleString()} / ${session.cashOut.toLocaleString()}
+                  {privacy
+                    ? "*** / ***"
+                    : `${formatCurrency(session.buyIn, session.currency).replace("+", "")} / ${formatCurrency(session.cashOut, session.currency).replace("+", "")}`}
                 </p>
               </div>
               <div
@@ -73,7 +79,7 @@ export function SessionTable({ sessions }: SessionTableProps) {
                 )}
               >
                 <p className="font-number text-lg font-bold">
-                  {formatCurrency(session.profit)}
+                  {formatCurrency(session.profit, session.currency, privacy)}
                 </p>
               </div>
             </div>

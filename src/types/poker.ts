@@ -43,6 +43,15 @@ export type Rank =
   | "3"
   | "2";
 
+// ===== Currency =====
+
+export type Currency = "USD" | "JPY";
+
+export interface CurrencyAmount {
+  amount: number;
+  currency: Currency;
+}
+
 // ===== Card =====
 
 export interface Card {
@@ -50,7 +59,7 @@ export interface Card {
   suit: Suit;
 }
 
-// ===== Tags =====
+// ===== Tags (Bilingual) =====
 
 export type StrategyTag =
   | "3BET"
@@ -82,9 +91,40 @@ export type ReviewTag =
   | "REVIEW_LATER"
   | "KEY_HAND"
   | "MISTAKE"
-  | "GREAT_PLAY";
+  | "GREAT_PLAY"
+  | "GTO_DEVIATION";
 
 export type HandTag = StrategyTag | MentalTag | ReviewTag;
+
+export const TAG_LABELS_JA: Record<HandTag, string> = {
+  "3BET": "3ベット",
+  "4BET": "4ベット",
+  "C-BET": "Cベット",
+  "C-BET_DEFENSE": "Cベット防御",
+  SQUEEZE: "スクイーズ",
+  BLUFF: "ブラフ",
+  VALUE_BET: "バリューベット",
+  SLOW_PLAY: "スロープレイ",
+  CHECK_RAISE: "チェックレイズ",
+  DONK_BET: "ドンクベット",
+  FLOAT: "フロート",
+  BARREL: "バレル",
+  OVERBET: "オーバーベット",
+  THIN_VALUE: "シンバリュー",
+  TILT_CHECK: "ティルト注意",
+  CONFIDENT: "自信あり",
+  FOCUSED: "集中",
+  TIRED: "疲労",
+  RUSHED: "焦り",
+  EMOTIONAL: "感情的",
+  SOLVER_NEEDED: "ソルバー確認",
+  TEAM_SHARE: "チーム共有",
+  REVIEW_LATER: "後で復習",
+  KEY_HAND: "キーハンド",
+  MISTAKE: "ミス",
+  GREAT_PLAY: "好プレイ",
+  GTO_DEVIATION: "GTO乖離",
+};
 
 // ===== Session =====
 
@@ -100,6 +140,7 @@ export interface Session {
   buyIn: number;
   cashOut: number;
   profit: number;
+  currency: Currency;
   durationMinutes: number;
   notes: string;
   playerId: string;
@@ -124,6 +165,16 @@ export interface PlayerAction {
   isHero: boolean;
 }
 
+export interface HandComment {
+  id: string;
+  handId: string;
+  playerId: string;
+  playerName: string;
+  content: string;
+  parentId?: string;
+  createdAt: string;
+}
+
 export interface HandHistory {
   id: string;
   sessionId?: string;
@@ -136,8 +187,10 @@ export interface HandHistory {
   streets: StreetAction[];
   pot: number;
   result: number;
+  currency: Currency;
   tags: HandTag[];
   notes: string;
+  comments: HandComment[];
   playerId: string;
   createdAt: string;
   updatedAt: string;
@@ -160,6 +213,19 @@ export interface Team {
   createdAt: string;
 }
 
+// ===== Range Library =====
+
+export interface RangeChart {
+  id: string;
+  title: string;
+  description: string;
+  position: Position;
+  situation: string;
+  grid: Record<string, "raise" | "call" | "fold" | "3bet" | "mixed">;
+  createdBy: string;
+  createdAt: string;
+}
+
 // ===== Stats =====
 
 export interface PlayerStats {
@@ -173,6 +239,7 @@ export interface PlayerStats {
   bestSession: number;
   worstSession: number;
   currentStreak: number;
+  currency: Currency;
   profitByGameType: Record<GameType, number>;
   profitByVenue: Record<Venue, number>;
   monthlyProfit: { month: string; profit: number }[];

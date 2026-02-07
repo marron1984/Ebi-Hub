@@ -1,6 +1,7 @@
 "use client";
 
 import type { HandHistory, Street } from "@/types/poker";
+import { TAG_LABELS_JA } from "@/types/poker";
 import { CardGroup } from "./card-display";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -9,14 +10,14 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { cn, formatCurrency } from "@/lib/utils";
+import { cn, formatCurrency, renderMarkdown } from "@/lib/utils";
 import { Brain, MessageSquare } from "lucide-react";
 
 const streetLabels: Record<Street, string> = {
-  preflop: "Pre-Flop",
-  flop: "Flop",
-  turn: "Turn",
-  river: "River",
+  preflop: "プリフロップ",
+  flop: "フロップ",
+  turn: "ターン",
+  river: "リバー",
 };
 
 const streetColors: Record<Street, string> = {
@@ -42,33 +43,35 @@ interface HandTimelineProps {
 }
 
 export function HandTimeline({ hand }: HandTimelineProps) {
+  const sym = hand.currency === "JPY" ? "¥" : "$";
+
   return (
     <div className="space-y-6">
       {/* Hero Cards */}
       <div className="flex items-center gap-4">
         <div>
           <p className="mb-1 text-xs font-medium text-muted-foreground">
-            Hero ({hand.heroPosition})
+            ヒーロー ({hand.heroPosition})
           </p>
           <CardGroup cards={hand.heroCards} size="lg" />
         </div>
         {hand.villainCards && (
           <div>
             <p className="mb-1 text-xs font-medium text-muted-foreground">
-              Villain
+              ヴィラン
             </p>
             <CardGroup cards={hand.villainCards} size="lg" />
           </div>
         )}
         <div className="ml-auto text-right">
-          <p className="text-xs text-muted-foreground">Result</p>
+          <p className="text-xs text-muted-foreground">結果</p>
           <p
             className={cn(
               "font-number text-2xl font-bold",
               hand.result >= 0 ? "text-emerald" : "text-crimson"
             )}
           >
-            {formatCurrency(hand.result)}
+            {formatCurrency(hand.result, hand.currency)}
           </p>
         </div>
       </div>
@@ -79,7 +82,7 @@ export function HandTimeline({ hand }: HandTimelineProps) {
         <div className="absolute left-4 top-0 h-full w-0.5 bg-border" />
 
         <div className="space-y-0">
-          {hand.streets.map((street, index) => (
+          {hand.streets.map((street) => (
             <div key={street.street} className="relative pl-12">
               {/* Timeline dot */}
               <div
@@ -103,7 +106,7 @@ export function HandTimeline({ hand }: HandTimelineProps) {
                         )}
                       </div>
                       <span className="font-number text-sm text-muted-foreground">
-                        Pot: ${street.potSize}
+                        ポット: {sym}{street.potSize}
                       </span>
                     </div>
 
@@ -137,7 +140,7 @@ export function HandTimeline({ hand }: HandTimelineProps) {
                           </span>
                           {action.amount && (
                             <span className="font-number text-xs text-muted-foreground">
-                              ${action.amount}
+                              {sym}{action.amount}
                             </span>
                           )}
                           {action.isHero && (
@@ -154,7 +157,7 @@ export function HandTimeline({ hand }: HandTimelineProps) {
                       <AccordionTrigger className="mt-3 pt-3 border-t border-border/50 text-xs text-muted-foreground hover:text-foreground hover:no-underline">
                         <span className="flex items-center gap-1.5">
                           <Brain className="h-3.5 w-3.5" />
-                          Thought Process
+                          思考プロセス
                         </span>
                       </AccordionTrigger>
                     )}
@@ -164,10 +167,11 @@ export function HandTimeline({ hand }: HandTimelineProps) {
                     <AccordionContent>
                       <div className="ml-4 mb-3 rounded-lg border border-emerald/20 bg-emerald/5 p-4">
                         <div className="flex items-start gap-2">
-                          <MessageSquare className="mt-0.5 h-4 w-4 text-emerald" />
-                          <p className="text-sm leading-relaxed">
-                            {street.thoughtProcess}
-                          </p>
+                          <MessageSquare className="mt-0.5 h-4 w-4 shrink-0 text-emerald" />
+                          <div
+                            className="markdown-content text-sm leading-relaxed"
+                            dangerouslySetInnerHTML={{ __html: renderMarkdown(street.thoughtProcess) }}
+                          />
                         </div>
                       </div>
                     </AccordionContent>
@@ -182,7 +186,7 @@ export function HandTimeline({ hand }: HandTimelineProps) {
       {/* Tags */}
       {hand.tags.length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs font-medium text-muted-foreground">Tags</p>
+          <p className="text-xs font-medium text-muted-foreground">タグ</p>
           <div className="flex flex-wrap gap-1.5">
             {hand.tags.map((tag) => {
               const strategyTags = [
@@ -200,7 +204,7 @@ export function HandTimeline({ hand }: HandTimelineProps) {
 
               return (
                 <Badge key={tag} variant={variant}>
-                  #{tag}
+                  #{TAG_LABELS_JA[tag]}
                 </Badge>
               );
             })}
@@ -211,8 +215,11 @@ export function HandTimeline({ hand }: HandTimelineProps) {
       {/* Notes */}
       {hand.notes && (
         <div className="rounded-lg border p-4">
-          <p className="mb-1 text-xs font-medium text-muted-foreground">Notes</p>
-          <p className="text-sm">{hand.notes}</p>
+          <p className="mb-1 text-xs font-medium text-muted-foreground">メモ</p>
+          <div
+            className="markdown-content text-sm"
+            dangerouslySetInnerHTML={{ __html: renderMarkdown(hand.notes) }}
+          />
         </div>
       )}
     </div>

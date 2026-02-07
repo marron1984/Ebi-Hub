@@ -27,13 +27,14 @@ export function ThemeToggle() {
       size="icon"
       className="h-9 w-9"
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+      title={theme === "dark" ? "白銀モードへ" : "墨黒モードへ"}
     >
       {theme === "dark" ? (
         <Sun className="h-4 w-4 text-gold" />
       ) : (
         <Moon className="h-4 w-4" />
       )}
-      <span className="sr-only">Toggle theme</span>
+      <span className="sr-only">テーマ切替</span>
     </Button>
   );
 }
