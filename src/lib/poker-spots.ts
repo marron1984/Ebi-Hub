@@ -167,6 +167,17 @@ export const OSAKA_SPOTS: PokerSpot[] = [
     playerPool: "loose",
     notes: "小規模だがアットホーム。週末は混雑する。",
   },
+  {
+    id: "guild",
+    name: "ギルド",
+    shortName: "ギルド",
+    area: "心斎橋",
+    stakes: ["100/200", "200/400"],
+    gameTypes: ["NLH", "PLO"],
+    category: "cash",
+    playerPool: "mixed",
+    notes: "トーナメントシリーズの開催実績あり。イベント時は特に盛り上がる。",
+  },
 ];
 
 export function getSpot(id: string): PokerSpot | undefined {

@@ -106,6 +106,17 @@ async function main() {
       playerPool: "loose",
       notes: "小規模だがアットホーム。週末は混雑する。",
     },
+    {
+      id: "guild",
+      name: "ギルド",
+      shortName: "ギルド",
+      area: "心斎橋",
+      stakes: JSON.stringify(["100/200", "200/400"]),
+      gameTypes: JSON.stringify(["NLH", "PLO"]),
+      category: "cash",
+      playerPool: "mixed",
+      notes: "トーナメントシリーズの開催実績あり。イベント時は特に盛り上がる。",
+    },
   ];
 
   for (const spot of spots) {
@@ -452,6 +463,205 @@ async function main() {
     await prisma.activity.create({ data: activity });
   }
   console.log(`  ✓ ${activities.length} activity feed entries created`);
+
+  // ===== Tournaments (Major Events) =====
+  const tournaments = [
+    {
+      name: "KOPT #12 Main Event",
+      series: "KOPT",
+      startDate: "2025-02-15",
+      endDate: "2025-02-16",
+      registrationEnd: "2025-02-15T14:00",
+      buyInJpy: 15000,
+      guaranteeJpy: 5000000,
+      gameType: "NLH",
+      format: "re-entry",
+      accentColor: "#FFD700",
+      status: "upcoming",
+      notes: "KOPT第12回メインイベント。Day1 3フライト制。",
+      spotId: "roots",
+    },
+    {
+      name: "TPC Osaka Championship",
+      series: "TPC",
+      startDate: "2025-02-22",
+      endDate: "2025-02-23",
+      registrationEnd: "2025-02-22T13:00",
+      buyInJpy: 20000,
+      guaranteeJpy: 8000000,
+      gameType: "NLH",
+      format: "freezeout",
+      accentColor: "#2563EB",
+      status: "upcoming",
+      notes: "TPC大阪チャンピオンシップ。フリーズアウト形式。",
+      spotId: "ggpl",
+    },
+    {
+      name: "JAPAN GOLD DRAGON Osaka Leg",
+      series: "JAPAN_GOLD_DRAGON",
+      startDate: "2025-03-01",
+      endDate: "2025-03-02",
+      registrationEnd: "2025-03-01T15:00",
+      buyInJpy: 30000,
+      guaranteeJpy: 10000000,
+      gameType: "NLH",
+      format: "re-entry",
+      accentColor: "#DC2626",
+      status: "upcoming",
+      notes: "ジャパンゴールドドラゴン大阪レッグ。優勝者はグランドファイナル出場権獲得。",
+      spotId: "roots",
+    },
+    {
+      name: "OSL Season 5 Day 2",
+      series: "OSL",
+      startDate: "2025-02-08",
+      registrationEnd: "2025-02-08T18:00",
+      buyInJpy: 5000,
+      guaranteeJpy: 500000,
+      gameType: "NLH",
+      format: "bounty",
+      accentColor: "#00FF9F",
+      status: "registration_open",
+      notes: "OSLシーズン5 Day2。バウンティ形式。今夜開催！",
+      spotId: "ggpl",
+    },
+    {
+      name: "ROOTS Saturday Deepstack",
+      series: "OTHER",
+      startDate: "2025-02-08",
+      registrationEnd: "2025-02-08T19:30",
+      buyInJpy: 8000,
+      guaranteeJpy: 300000,
+      gameType: "NLH",
+      format: "deepstack",
+      accentColor: "#F59E0B",
+      status: "registration_open",
+      notes: "毎週土曜開催のディープスタック。レイト飛込みOK。",
+      spotId: "roots",
+    },
+    {
+      name: "ギルド Monthly Championship",
+      series: "OTHER",
+      startDate: "2025-02-09",
+      registrationEnd: "2025-02-09T14:00",
+      buyInJpy: 10000,
+      guaranteeJpy: 1000000,
+      gameType: "NLH",
+      format: "freezeout",
+      accentColor: "#8B5CF6",
+      status: "upcoming",
+      notes: "ギルド月例チャンピオンシップ。フリーズアウト。",
+      spotId: "guild",
+    },
+  ];
+
+  for (const tournament of tournaments) {
+    await prisma.tournament.create({ data: tournament });
+  }
+  console.log(`  ✓ ${tournaments.length} tournaments created`);
+
+  // ===== Daily Events (Today's schedule) =====
+  const dailyEvents = [
+    {
+      date: "2025-02-08",
+      title: "NLH キャッシュゲーム 100/200",
+      startTime: "14:00",
+      endTime: "05:00",
+      eventType: "cash_game",
+      detail: "常設キャッシュゲーム。2テーブル開放。",
+      spotId: "roots",
+    },
+    {
+      date: "2025-02-08",
+      title: "Saturday Deepstack トーナメント",
+      startTime: "19:00",
+      endTime: "23:00",
+      eventType: "tournament",
+      buyInJpy: 8000,
+      detail: "毎週土曜のディープスタック。25000チップスタート。",
+      spotId: "roots",
+    },
+    {
+      date: "2025-02-08",
+      title: "NLH キャッシュ 100/200",
+      startTime: "15:00",
+      endTime: "03:00",
+      eventType: "cash_game",
+      detail: "アフタヌーンキャッシュ開放。",
+      spotId: "poker-live",
+    },
+    {
+      date: "2025-02-08",
+      title: "OSL Season 5 Day 2 バウンティ",
+      startTime: "18:00",
+      endTime: "23:00",
+      eventType: "tournament",
+      buyInJpy: 5000,
+      detail: "OSLバウンティトーナメント。1キル500円バック。",
+      spotId: "ggpl",
+    },
+    {
+      date: "2025-02-08",
+      title: "NLH/PLO ミックスゲーム",
+      startTime: "16:00",
+      endTime: "01:00",
+      eventType: "cash_game",
+      detail: "NLH/PLOローテーション。200/400メイン。",
+      spotId: "ggpl",
+    },
+    {
+      date: "2025-02-08",
+      title: "フリーロール土曜大会",
+      startTime: "15:00",
+      endTime: "18:00",
+      eventType: "freeroll",
+      buyInJpy: 0,
+      detail: "参加費無料。優勝者に次回トーナメントシート進呈。",
+      spotId: "blow",
+    },
+    {
+      date: "2025-02-08",
+      title: "ビギナーズNLH 50/100",
+      startTime: "14:00",
+      endTime: "20:00",
+      eventType: "cash_game",
+      detail: "初心者向け低ステークス。ディーラーが丁寧に説明。",
+      spotId: "zeus",
+    },
+    {
+      date: "2025-02-08",
+      title: "PLO キャッシュ 200/400",
+      startTime: "18:00",
+      endTime: "02:00",
+      eventType: "cash_game",
+      detail: "PLO専用テーブル。PLO好き集合。",
+      spotId: "universe",
+    },
+    {
+      date: "2025-02-08",
+      title: "サタデーナイトNLH 100/200",
+      startTime: "20:00",
+      endTime: "04:00",
+      eventType: "cash_game",
+      detail: "土曜の夜は最も人が集まる時間帯。",
+      spotId: "jerrys",
+    },
+    {
+      date: "2025-02-08",
+      title: "ギルド リーグ戦 Week 6",
+      startTime: "17:00",
+      endTime: "22:00",
+      eventType: "league",
+      buyInJpy: 3000,
+      detail: "月間リーグ戦。ポイント上位にプライズ。",
+      spotId: "guild",
+    },
+  ];
+
+  for (const event of dailyEvents) {
+    await prisma.dailyEvent.create({ data: event });
+  }
+  console.log(`  ✓ ${dailyEvents.length} daily events created`);
 
   console.log("\n🦐 Ebi-Hub seed complete!");
 }

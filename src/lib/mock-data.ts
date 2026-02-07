@@ -713,3 +713,153 @@ export const mockActivities: MockActivity[] = [
     createdAt: "2025-02-04T12:00:00Z",
   },
 ];
+
+// ===== Tournaments (Major Events) =====
+
+export interface MockTournament {
+  id: string;
+  name: string;
+  series: string;
+  spotId: string;
+  spotName: string;
+  startDate: string;
+  endDate?: string;
+  registrationEnd?: string;
+  buyInJpy: number;
+  guaranteeJpy?: number;
+  gameType: string;
+  format: string;
+  accentColor: string;
+  status: "upcoming" | "registration_open" | "running" | "completed";
+  notes?: string;
+}
+
+export const mockTournaments: MockTournament[] = [
+  {
+    id: "t-1",
+    name: "OSL Season 5 Day 2",
+    series: "OSL",
+    spotId: "ggpl",
+    spotName: "GGPL OSAKA",
+    startDate: "2025-02-08",
+    registrationEnd: "2025-02-08T18:00",
+    buyInJpy: 5000,
+    guaranteeJpy: 500000,
+    gameType: "NLH",
+    format: "bounty",
+    accentColor: "#00FF9F",
+    status: "registration_open",
+    notes: "OSLシーズン5 Day2。バウンティ形式。今夜開催！",
+  },
+  {
+    id: "t-2",
+    name: "ROOTS Saturday Deepstack",
+    series: "OTHER",
+    spotId: "roots",
+    spotName: "ROOTS OSAKA",
+    startDate: "2025-02-08",
+    registrationEnd: "2025-02-08T19:30",
+    buyInJpy: 8000,
+    guaranteeJpy: 300000,
+    gameType: "NLH",
+    format: "deepstack",
+    accentColor: "#F59E0B",
+    status: "registration_open",
+    notes: "毎週土曜開催のディープスタック。レイト飛込みOK。",
+  },
+  {
+    id: "t-3",
+    name: "ギルド Monthly Championship",
+    series: "OTHER",
+    spotId: "guild",
+    spotName: "ギルド",
+    startDate: "2025-02-09",
+    registrationEnd: "2025-02-09T14:00",
+    buyInJpy: 10000,
+    guaranteeJpy: 1000000,
+    gameType: "NLH",
+    format: "freezeout",
+    accentColor: "#8B5CF6",
+    status: "upcoming",
+    notes: "ギルド月例チャンピオンシップ。フリーズアウト。",
+  },
+  {
+    id: "t-4",
+    name: "KOPT #12 Main Event",
+    series: "KOPT",
+    spotId: "roots",
+    spotName: "ROOTS OSAKA",
+    startDate: "2025-02-15",
+    endDate: "2025-02-16",
+    registrationEnd: "2025-02-15T14:00",
+    buyInJpy: 15000,
+    guaranteeJpy: 5000000,
+    gameType: "NLH",
+    format: "re-entry",
+    accentColor: "#FFD700",
+    status: "upcoming",
+    notes: "KOPT第12回メインイベント。Day1 3フライト制。",
+  },
+  {
+    id: "t-5",
+    name: "TPC Osaka Championship",
+    series: "TPC",
+    spotId: "ggpl",
+    spotName: "GGPL OSAKA",
+    startDate: "2025-02-22",
+    endDate: "2025-02-23",
+    registrationEnd: "2025-02-22T13:00",
+    buyInJpy: 20000,
+    guaranteeJpy: 8000000,
+    gameType: "NLH",
+    format: "freezeout",
+    accentColor: "#2563EB",
+    status: "upcoming",
+    notes: "TPC大阪チャンピオンシップ。フリーズアウト形式。",
+  },
+  {
+    id: "t-6",
+    name: "JAPAN GOLD DRAGON Osaka Leg",
+    series: "JAPAN_GOLD_DRAGON",
+    spotId: "roots",
+    spotName: "ROOTS OSAKA",
+    startDate: "2025-03-01",
+    endDate: "2025-03-02",
+    registrationEnd: "2025-03-01T15:00",
+    buyInJpy: 30000,
+    guaranteeJpy: 10000000,
+    gameType: "NLH",
+    format: "re-entry",
+    accentColor: "#DC2626",
+    status: "upcoming",
+    notes: "ジャパンゴールドドラゴン大阪レッグ。優勝者はグランドファイナル出場権獲得。",
+  },
+];
+
+// ===== Daily Events (Today's schedule) =====
+
+export interface MockDailyEvent {
+  id: string;
+  spotId: string;
+  spotName: string;
+  date: string;
+  title: string;
+  startTime: string;
+  endTime?: string;
+  eventType: "tournament" | "cash_game" | "freeroll" | "special" | "league";
+  buyInJpy?: number;
+  detail?: string;
+}
+
+export const mockDailyEvents: MockDailyEvent[] = [
+  { id: "de-1", spotId: "roots", spotName: "ROOTS", date: "2025-02-08", title: "NLH キャッシュ 100/200", startTime: "14:00", endTime: "05:00", eventType: "cash_game", detail: "常設キャッシュゲーム。2テーブル開放。" },
+  { id: "de-2", spotId: "roots", spotName: "ROOTS", date: "2025-02-08", title: "Saturday Deepstack", startTime: "19:00", endTime: "23:00", eventType: "tournament", buyInJpy: 8000, detail: "毎週土曜のディープスタック。25000チップスタート。" },
+  { id: "de-3", spotId: "poker-live", spotName: "PLO", date: "2025-02-08", title: "NLH キャッシュ 100/200", startTime: "15:00", endTime: "03:00", eventType: "cash_game", detail: "アフタヌーンキャッシュ開放。" },
+  { id: "de-4", spotId: "ggpl", spotName: "GGPL", date: "2025-02-08", title: "OSL Season 5 Day 2 バウンティ", startTime: "18:00", endTime: "23:00", eventType: "tournament", buyInJpy: 5000, detail: "OSLバウンティトーナメント。1キル500円バック。" },
+  { id: "de-5", spotId: "ggpl", spotName: "GGPL", date: "2025-02-08", title: "NLH/PLO ミックスゲーム", startTime: "16:00", endTime: "01:00", eventType: "cash_game", detail: "NLH/PLOローテーション。200/400メイン。" },
+  { id: "de-6", spotId: "blow", spotName: "BLOW", date: "2025-02-08", title: "フリーロール土曜大会", startTime: "15:00", endTime: "18:00", eventType: "freeroll", buyInJpy: 0, detail: "参加費無料。優勝者に次回トーナメントシート進呈。" },
+  { id: "de-7", spotId: "zeus", spotName: "ゼウス", date: "2025-02-08", title: "ビギナーズNLH 50/100", startTime: "14:00", endTime: "20:00", eventType: "cash_game", detail: "初心者向け低ステークス。" },
+  { id: "de-8", spotId: "universe", spotName: "UNI", date: "2025-02-08", title: "PLO キャッシュ 200/400", startTime: "18:00", endTime: "02:00", eventType: "cash_game", detail: "PLO専用テーブル。" },
+  { id: "de-9", spotId: "jerrys", spotName: "Jerry", date: "2025-02-08", title: "サタデーナイトNLH 100/200", startTime: "20:00", endTime: "04:00", eventType: "cash_game", detail: "土曜の夜は最も人が集まる時間帯。" },
+  { id: "de-10", spotId: "guild", spotName: "ギルド", date: "2025-02-08", title: "ギルド リーグ戦 Week 6", startTime: "17:00", endTime: "22:00", eventType: "league", buyInJpy: 3000, detail: "月間リーグ戦。ポイント上位にプライズ。" },
+];

@@ -63,6 +63,55 @@ model Spot {
   sessions      Session[]
   opponentNotes OpponentNote[]
   primaryUsers  User[]          @relation("PrimarySpot")
+  tournaments   Tournament[]
+  dailyEvents   DailyEvent[]
+}
+
+// ===== Tournament (Major Events) =====
+model Tournament {
+  id              String   @id @default(cuid())
+  name            String
+  series          String   // "KOPT" | "TPC" | "JAPAN_GOLD_DRAGON" | "OSL" | "WPT" | "OTHER"
+  startDate       String   // YYYY-MM-DD
+  endDate         String?  // YYYY-MM-DD (multi-day events)
+  registrationEnd String?  // YYYY-MM-DDTHH:MM (ISO for precise cutoff)
+  buyInJpy        Int
+  guaranteeJpy    Int?
+  gameType        String   // "NLH" | "PLO" | "Mixed"
+  format          String   // "freezeout" | "re-entry" | "bounty" | "satellite" | "deepstack"
+  accentColor     String   @default("#F59E0B") // Event brand color for パッキリ border
+  status          String   @default("upcoming") // "upcoming" | "registration_open" | "running" | "completed"
+  notes           String?
+
+  spotId String
+  spot   Spot   @relation(fields: [spotId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([startDate])
+  @@index([status])
+  @@index([spotId])
+}
+
+// ===== Daily Event (Spot-level daily schedule) =====
+model DailyEvent {
+  id        String @id @default(cuid())
+  date      String // YYYY-MM-DD
+  title     String
+  startTime String // HH:MM
+  endTime   String? // HH:MM
+  eventType String // "tournament" | "cash_game" | "freeroll" | "special" | "league"
+  buyInJpy  Int?
+  detail    String?
+  source    String @default("manual") // "manual" | "poker_walker" | "x_scrape"
+
+  spotId String
+  spot   Spot   @relation(fields: [spotId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([date])
+  @@index([spotId])
 }
 
 // ===== Session =====

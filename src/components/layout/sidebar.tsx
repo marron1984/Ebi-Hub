@@ -11,12 +11,14 @@ import {
   Spade,
   BookOpen,
   Calculator,
+  Calendar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./theme-toggle";
 
 const navigation = [
   { name: "ダッシュボード", href: "/dashboard", icon: LayoutDashboard },
+  { name: "イベント", href: "/events", icon: Calendar },
   { name: "セッション記録", href: "/sessions/new", icon: Plus },
   { name: "ハンドレビュー", href: "/hands", icon: ClipboardList },
   { name: "レンジ表", href: "/ranges", icon: BookOpen },

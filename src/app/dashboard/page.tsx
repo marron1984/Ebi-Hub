@@ -4,6 +4,7 @@ import {
   DollarSign, Clock, TrendingUp, Trophy, Target, Flame,
   ArrowUpRight, ArrowDownRight, MapPin,
   Play, Square, BookOpen, MessageSquare, Eye,
+  Radio, Calendar, ChevronRight, Zap,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,7 +16,11 @@ import { StatsCard } from "@/components/poker/stats-card";
 import { ProfitChart } from "@/components/poker/profit-chart";
 import { SessionTable } from "@/components/poker/session-table";
 import { PrivacyToggle } from "@/components/poker/privacy-toggle";
-import { mockSessions, mockStats, mockActivities } from "@/lib/mock-data";
+import {
+  mockSessions, mockStats, mockActivities,
+  mockTournaments, mockDailyEvents,
+} from "@/lib/mock-data";
+import Link from "next/link";
 import {
   formatJpy,
   calculateTotalProfitJpy,
@@ -437,6 +442,80 @@ export default function DashboardPage() {
           </div>
         </CardContent>
       </Card>
+      {/* ===== Today's Events ===== */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between text-base">
+            <span className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-emerald" />
+              本日の大阪イベント
+              {mockTournaments.some((t) => t.status === "registration_open") && (
+                <span className="flex items-center gap-1 rounded-full border border-emerald/30 bg-emerald/10 px-2 py-0.5 text-[10px] font-bold text-emerald">
+                  <Radio className="h-2.5 w-2.5 animate-pulse" />
+                  LIVE
+                </span>
+              )}
+            </span>
+            <Link
+              href="/events"
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-emerald transition-colors"
+            >
+              全イベント <ChevronRight className="h-3 w-3" />
+            </Link>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {/* Registration-open tournaments */}
+          {mockTournaments
+            .filter((t) => t.status === "registration_open")
+            .map((t) => (
+              <div
+                key={t.id}
+                className="mb-3 rounded-md border p-3"
+                style={{ borderColor: `${t.accentColor}66`, borderLeftWidth: 3, borderLeftColor: t.accentColor }}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <Zap className="h-3.5 w-3.5" style={{ color: t.accentColor }} />
+                  <span className="text-sm font-bold">{t.name}</span>
+                  <span className="ml-auto flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-bold" style={{ borderColor: `${t.accentColor}66`, color: t.accentColor }}>
+                    <Radio className="h-2 w-2 animate-pulse" />
+                    レジスト受付中
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{t.spotName}</span>
+                  <span className="flex items-center gap-1"><Clock className="h-3 w-3" />締切 {t.registrationEnd?.split("T")[1]}</span>
+                  <span className="flex items-center gap-1"><DollarSign className="h-3 w-3" />¥{t.buyInJpy.toLocaleString()}</span>
+                  {t.guaranteeJpy && <span className="font-number text-emerald">GTD ¥{t.guaranteeJpy.toLocaleString()}</span>}
+                </div>
+              </div>
+            ))}
+
+          {/* Daily events summary */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+            {mockDailyEvents.slice(0, 6).map((e) => {
+              const typeColor = e.eventType === "tournament" ? "text-emerald" :
+                e.eventType === "freeroll" ? "text-emerald" :
+                e.eventType === "league" ? "text-[#8B5CF6]" : "text-gold";
+              const typeLabel = e.eventType === "tournament" ? "大会" :
+                e.eventType === "cash_game" ? "キャッシュ" :
+                e.eventType === "freeroll" ? "フリーロール" :
+                e.eventType === "league" ? "リーグ" : "特別";
+              return (
+                <div key={e.id} className="flex items-center gap-2 rounded-md border p-2">
+                  <span className="spot-badge">{e.spotName}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium truncate">{e.title}</p>
+                    <p className="text-[10px] text-muted-foreground">{e.startTime}{e.endTime ? ` ~ ${e.endTime}` : ""}</p>
+                  </div>
+                  <Badge variant="outline" className={cn("text-[10px] shrink-0", typeColor)}>{typeLabel}</Badge>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* ===== Activity Feed ===== */}
       <Card>
         <CardHeader>
