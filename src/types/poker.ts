@@ -134,6 +134,8 @@ export interface Session {
   endTime: string;
   venue: Venue;
   location: string;
+  /** Osaka spot ID (optional, for live sessions) */
+  spotId?: string;
   gameType: GameType;
   stakes: string;
   /** Original currency amounts */
@@ -215,6 +217,8 @@ export interface Player {
   avatar?: string;
   role: "leader" | "member";
   joinedAt: string;
+  /** Primary Osaka spot ID */
+  primarySpotId?: string;
 }
 
 export interface Team {

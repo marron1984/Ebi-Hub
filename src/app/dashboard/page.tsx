@@ -2,13 +2,14 @@
 
 import {
   DollarSign, Clock, TrendingUp, Trophy, Target, Flame,
-  ArrowUpRight, ArrowDownRight,
+  ArrowUpRight, ArrowDownRight, MapPin,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { StatsCard } from "@/components/poker/stats-card";
 import { ProfitChart } from "@/components/poker/profit-chart";
 import { SessionTable } from "@/components/poker/session-table";
@@ -16,26 +17,28 @@ import { PrivacyToggle } from "@/components/poker/privacy-toggle";
 import { mockSessions, mockStats } from "@/lib/mock-data";
 import {
   formatJpy,
-  formatJpyCompact,
-  formatDualCurrency,
   calculateTotalProfitJpy,
   POKER_CURRENCIES,
   getCurrencyFlag,
 } from "@/lib/currency";
 import type { PokerCurrency } from "@/lib/currency";
 import { formatDuration } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { useState } from "react";
 import type { GameType, Venue } from "@/types/poker";
+import { OSAKA_SPOTS } from "@/lib/poker-spots";
 
 export default function DashboardPage() {
   const [gameFilter, setGameFilter] = useState<GameType | "all">("all");
   const [venueFilter, setVenueFilter] = useState<Venue | "all">("all");
+  const [spotFilter, setSpotFilter] = useState<string>("all");
   const [privacy, setPrivacy] = useState(false);
 
   // ---------- Filtered sessions ----------
   const filteredSessions = mockSessions.filter((s) => {
     if (gameFilter !== "all" && s.gameType !== gameFilter) return false;
     if (venueFilter !== "all" && s.venue !== venueFilter) return false;
+    if (spotFilter !== "all" && s.spotId !== spotFilter) return false;
     return true;
   });
 
@@ -58,7 +61,6 @@ export default function DashboardPage() {
         )
       : 0;
 
-  // Approximate USD equivalent for sub-display
   const approxUsd = Math.round(
     filteredProfitJpy / POKER_CURRENCIES.USD.defaultRate,
   );
@@ -80,6 +82,17 @@ export default function DashboardPage() {
     { originalTotal: number; jpyTotal: number; count: number },
   ][];
 
+  // ---------- Spot summary ----------
+  const spotMap = filteredSessions.reduce<
+    Record<string, { jpyTotal: number; count: number }>
+  >((acc, s) => {
+    const key = s.spotId || "_other";
+    if (!acc[key]) acc[key] = { jpyTotal: 0, count: 0 };
+    acc[key].jpyTotal += s.profitJpy;
+    acc[key].count += 1;
+    return acc;
+  }, {});
+
   return (
     <div className="space-y-6">
       {/* ===== Header ===== */}
@@ -92,7 +105,7 @@ export default function DashboardPage() {
             パフォーマンス概要とセッション分析
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <PrivacyToggle
             isPrivate={privacy}
             onToggle={() => setPrivacy(!privacy)}
@@ -125,6 +138,28 @@ export default function DashboardPage() {
             </SelectContent>
           </Select>
         </div>
+      </div>
+
+      {/* ===== Spot Filter ===== */}
+      <div className="flex flex-wrap gap-1.5">
+        <Badge
+          variant={spotFilter === "all" ? "default" : "outline"}
+          className="cursor-pointer"
+          onClick={() => setSpotFilter("all")}
+        >
+          全スポット
+        </Badge>
+        {OSAKA_SPOTS.map((spot) => (
+          <Badge
+            key={spot.id}
+            variant={spotFilter === spot.id ? "default" : "outline"}
+            className="cursor-pointer text-xs"
+            onClick={() => setSpotFilter(spot.id)}
+          >
+            <MapPin className="mr-1 h-3 w-3" />
+            {spot.shortName}
+          </Badge>
+        ))}
       </div>
 
       {/* ===== Stats Cards ===== */}
@@ -229,14 +264,15 @@ export default function DashboardPage() {
         </TabsContent>
       </Tabs>
 
-      {/* ===== Venue & Game Breakdown ===== */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      {/* ===== Breakdown Grid ===== */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {/* Venue */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base">会場別</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
+            <div className="space-y-2">
               {(["live", "online"] as const).map((venue) => {
                 const venueProfit = filteredSessions
                   .filter((s) => s.venue === venue)
@@ -248,7 +284,7 @@ export default function DashboardPage() {
                 return (
                   <div
                     key={venue}
-                    className="flex items-center justify-between rounded-lg border p-3"
+                    className="flex items-center justify-between rounded-md border p-3"
                   >
                     <div>
                       <p className="text-sm font-medium">{label}</p>
@@ -257,9 +293,10 @@ export default function DashboardPage() {
                       </p>
                     </div>
                     <span
-                      className={`font-number text-sm font-bold ${
+                      className={cn(
+                        "font-number text-sm font-bold",
                         venueProfit >= 0 ? "text-emerald" : "text-crimson"
-                      }`}
+                      )}
                     >
                       {formatJpy(venueProfit, privacy)}
                     </span>
@@ -270,12 +307,13 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
+        {/* Game Type */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base">ゲーム種別</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
+            <div className="space-y-2">
               {(["NLH", "PLO", "PLO5"] as const).map((game) => {
                 const gameProfit = filteredSessions
                   .filter((s) => s.gameType === game)
@@ -287,7 +325,7 @@ export default function DashboardPage() {
                 return (
                   <div
                     key={game}
-                    className="flex items-center justify-between rounded-lg border p-3"
+                    className="flex items-center justify-between rounded-md border p-3"
                   >
                     <div>
                       <p className="text-sm font-medium">{game}</p>
@@ -296,9 +334,10 @@ export default function DashboardPage() {
                       </p>
                     </div>
                     <span
-                      className={`font-number text-sm font-bold ${
+                      className={cn(
+                        "font-number text-sm font-bold",
                         gameProfit >= 0 ? "text-emerald" : "text-crimson"
-                      }`}
+                      )}
                     >
                       {formatJpy(gameProfit, privacy)}
                     </span>
@@ -308,22 +347,60 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Spot Breakdown */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">スポット別</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {Object.entries(spotMap)
+                .sort(([, a], [, b]) => b.jpyTotal - a.jpyTotal)
+                .map(([key, data]) => {
+                  const spot = OSAKA_SPOTS.find((s) => s.id === key);
+                  const label = spot ? spot.shortName : "その他";
+                  return (
+                    <div
+                      key={key}
+                      className="flex items-center justify-between rounded-md border p-3"
+                    >
+                      <div>
+                        <p className="text-sm font-medium">{label}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {data.count} セッション
+                        </p>
+                      </div>
+                      <span
+                        className={cn(
+                          "font-number text-sm font-bold",
+                          data.jpyTotal >= 0 ? "text-emerald" : "text-crimson"
+                        )}
+                      >
+                        {formatJpy(data.jpyTotal, privacy)}
+                      </span>
+                    </div>
+                  );
+                })}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* ===== Currency Summary (通貨別サマリー) ===== */}
+      {/* ===== Currency Summary ===== */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">通貨別サマリー</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
+          <div className="space-y-2">
             {currencySummary.map(([currency, data]) => {
               const info = POKER_CURRENCIES[currency as PokerCurrency];
               const flag = getCurrencyFlag(currency as PokerCurrency);
               return (
                 <div
                   key={currency}
-                  className="flex items-center justify-between rounded-lg border p-3"
+                  className="flex items-center justify-between rounded-md border p-3"
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-xl">{flag}</span>
@@ -338,9 +415,10 @@ export default function DashboardPage() {
                   </div>
                   <div className="text-right">
                     <p
-                      className={`font-number text-sm font-bold ${
+                      className={cn(
+                        "font-number text-sm font-bold",
                         data.jpyTotal >= 0 ? "text-emerald" : "text-crimson"
-                      }`}
+                      )}
                     >
                       {formatJpy(data.jpyTotal, privacy)}
                     </p>

@@ -20,6 +20,7 @@ import {
   toJpy, formatOriginal, formatJpy, getCurrencyFlag,
   type PokerCurrency,
 } from "@/lib/currency";
+import { OSAKA_SPOTS } from "@/lib/poker-spots";
 import type { GameType, Venue } from "@/types/poker";
 import type { SessionStatus } from "@/lib/currency";
 
@@ -55,6 +56,7 @@ export default function NewSessionPage() {
   const [sessionDate, setSessionDate] = useState(todayString());
   const [venue, setVenue] = useState<Venue>("live");
   const [location, setLocation] = useState("");
+  const [spotId, setSpotId] = useState<string>("");
   const [gameType, setGameType] = useState<GameType>("NLH");
   const [currency, setCurrency] = useState<PokerCurrency>(getDefaultCurrency("live"));
   const [exchangeRate, setExchangeRate] = useState<string>(
@@ -195,6 +197,35 @@ export default function NewSessionPage() {
                   </Select>
                 </div>
               </div>
+
+              {/* Spot selector (live only) */}
+              {venue === "live" && (
+                <div className="space-y-2">
+                  <Label>スポット（大阪）</Label>
+                  <div className="flex flex-wrap gap-1.5">
+                    <Badge
+                      variant={spotId === "" ? "default" : "outline"}
+                      className="cursor-pointer"
+                      onClick={() => { setSpotId(""); }}
+                    >
+                      その他
+                    </Badge>
+                    {OSAKA_SPOTS.map((spot) => (
+                      <Badge
+                        key={spot.id}
+                        variant={spotId === spot.id ? "default" : "outline"}
+                        className="cursor-pointer text-xs"
+                        onClick={() => {
+                          setSpotId(spot.id);
+                          setLocation(spot.name);
+                        }}
+                      >
+                        {spot.shortName}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -463,6 +494,16 @@ export default function NewSessionPage() {
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">場所</span>
                     <span className="font-medium">{location}</span>
+                  </div>
+                )}
+
+                {/* Spot */}
+                {spotId && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">スポット</span>
+                    <span className="spot-badge">
+                      {OSAKA_SPOTS.find(s => s.id === spotId)?.shortName}
+                    </span>
                   </div>
                 )}
 

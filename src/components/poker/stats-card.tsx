@@ -12,18 +12,18 @@ interface StatsCardProps {
   accentColor?: "emerald" | "crimson" | "gold" | "default";
 }
 
-const accentStyles = {
-  emerald: "from-emerald/20 to-emerald/5 border-emerald/20",
-  crimson: "from-crimson/20 to-crimson/5 border-crimson/20",
-  gold: "from-gold/20 to-gold/5 border-gold/20",
-  default: "from-primary/10 to-primary/5 border-border",
+const borderStyles = {
+  emerald: "border-emerald/40",
+  crimson: "border-crimson/40",
+  gold: "border-gold/40",
+  default: "border-border",
 };
 
 const iconBgStyles = {
-  emerald: "bg-emerald/20 text-emerald",
-  crimson: "bg-crimson/20 text-crimson",
-  gold: "bg-gold/20 text-gold",
-  default: "bg-primary/20 text-primary",
+  emerald: "bg-emerald/10 text-emerald",
+  crimson: "bg-crimson/10 text-crimson",
+  gold: "bg-gold/10 text-gold",
+  default: "bg-primary/10 text-primary",
 };
 
 export function StatsCard({
@@ -37,8 +37,8 @@ export function StatsCard({
   return (
     <div
       className={cn(
-        "glass rounded-xl border p-5 bg-gradient-to-br transition-all hover:scale-[1.02]",
-        accentStyles[accentColor]
+        "rounded-lg border bg-card p-5 transition-colors",
+        borderStyles[accentColor]
       )}
     >
       <div className="flex items-start justify-between">
@@ -59,7 +59,7 @@ export function StatsCard({
             <p className="text-xs text-muted-foreground">{subtitle}</p>
           )}
         </div>
-        <div className={cn("rounded-lg p-2.5", iconBgStyles[accentColor])}>
+        <div className={cn("rounded-md p-2.5", iconBgStyles[accentColor])}>
           <Icon className="h-5 w-5" />
         </div>
       </div>

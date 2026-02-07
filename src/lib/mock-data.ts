@@ -7,14 +7,15 @@ import type {
   RangeChart,
 } from "@/types/poker";
 import type { PokerCurrency } from "@/lib/currency";
+import type { OpponentNote, MemberActivity } from "@/lib/poker-spots";
 
 // ===== Players =====
 
 export const mockPlayers: Player[] = [
-  { id: "p1", name: "武 (Takeshi)", role: "leader", joinedAt: "2024-01-15" },
-  { id: "p2", name: "優希 (Yuki)", role: "member", joinedAt: "2024-02-01" },
-  { id: "p3", name: "涼 (Ryo)", role: "member", joinedAt: "2024-03-10" },
-  { id: "p4", name: "陽斗 (Haruto)", role: "member", joinedAt: "2024-04-20" },
+  { id: "p1", name: "武 (Takeshi)", role: "leader", joinedAt: "2024-01-15", primarySpotId: "roots" },
+  { id: "p2", name: "優希 (Yuki)", role: "member", joinedAt: "2024-02-01", primarySpotId: "ggpl" },
+  { id: "p3", name: "涼 (Ryo)", role: "member", joinedAt: "2024-03-10", primarySpotId: "poker-live" },
+  { id: "p4", name: "陽斗 (Haruto)", role: "member", joinedAt: "2024-04-20", primarySpotId: "blow" },
 ];
 
 // ===== Sessions (multi-currency) =====
@@ -22,7 +23,7 @@ export const mockPlayers: Player[] = [
 export const mockSessions: Session[] = [
   {
     id: "s1", sessionDate: "2025-02-01", date: "2025-02-01", startTime: "20:00", endTime: "02:30",
-    venue: "live", location: "東京ポーカークラブ", gameType: "NLH", stakes: "1/2",
+    venue: "live", location: "ROOTS OSAKA", spotId: "roots", gameType: "NLH", stakes: "100/200",
     buyIn: 300, cashOut: 785, profit: 485, currency: "USD",
     exchangeRate: 150, buyInJpy: 45000, cashOutJpy: 117750, profitJpy: 72750,
     status: "SETTLED", durationMinutes: 390,
@@ -58,7 +59,7 @@ export const mockSessions: Session[] = [
   },
   {
     id: "s5", sessionDate: "2025-01-18", date: "2025-01-18", startTime: "20:00", endTime: "04:00",
-    venue: "live", location: "東京ポーカークラブ", gameType: "NLH", stakes: "2/5",
+    venue: "live", location: "GGPL OSAKA", spotId: "ggpl", gameType: "NLH", stakes: "200/400",
     buyIn: 500, cashOut: 1450, profit: 950, currency: "USD",
     exchangeRate: 150, buyInJpy: 75000, cashOutJpy: 217500, profitJpy: 142500,
     status: "SETTLED", durationMinutes: 480,
@@ -67,7 +68,7 @@ export const mockSessions: Session[] = [
   },
   {
     id: "s6", sessionDate: "2025-01-15", date: "2025-01-15", startTime: "19:30", endTime: "00:30",
-    venue: "live", location: "大阪カードルーム", gameType: "NLH", stakes: "1/2",
+    venue: "live", location: "POKER LIVE OSAKA", spotId: "poker-live", gameType: "NLH", stakes: "100/200",
     buyIn: 300, cashOut: 195, profit: -105, currency: "USD",
     exchangeRate: 150, buyInJpy: 45000, cashOutJpy: 29250, profitJpy: -15750,
     status: "SETTLED", durationMinutes: 300,
@@ -85,7 +86,7 @@ export const mockSessions: Session[] = [
   },
   {
     id: "s8", sessionDate: "2025-01-08", date: "2025-01-08", startTime: "20:00", endTime: "01:00",
-    venue: "live", location: "東京ポーカークラブ", gameType: "NLH", stakes: "1/2",
+    venue: "live", location: "BLOW", spotId: "blow", gameType: "NLH", stakes: "100/200",
     buyIn: 300, cashOut: 520, profit: 220, currency: "USD",
     exchangeRate: 150, buyInJpy: 45000, cashOutJpy: 78000, profitJpy: 33000,
     status: "SETTLED", durationMinutes: 300,
@@ -103,7 +104,7 @@ export const mockSessions: Session[] = [
   },
   {
     id: "s10", sessionDate: "2025-01-02", date: "2025-01-02", startTime: "21:00", endTime: "03:30",
-    venue: "live", location: "東京ポーカークラブ", gameType: "NLH", stakes: "2/5",
+    venue: "live", location: "UNIVERSE", spotId: "universe", gameType: "NLH", stakes: "200/400",
     buyIn: 500, cashOut: 320, profit: -180, currency: "USD",
     exchangeRate: 150, buyInJpy: 75000, cashOutJpy: 48000, profitJpy: -27000,
     status: "SETTLED", durationMinutes: 390,
@@ -112,7 +113,7 @@ export const mockSessions: Session[] = [
   },
   {
     id: "s11", sessionDate: "2024-12-28", date: "2024-12-28", startTime: "20:00", endTime: "02:00",
-    venue: "live", location: "秋葉原ポーカーバー", gameType: "NLH", stakes: "100/200",
+    venue: "live", location: "Jerrys", spotId: "jerrys", gameType: "NLH", stakes: "100/200",
     buyIn: 30000, cashOut: 52000, profit: 22000, currency: "JPY",
     exchangeRate: 1, buyInJpy: 30000, cashOutJpy: 52000, profitJpy: 22000,
     status: "SETTLED", durationMinutes: 360,
@@ -475,5 +476,111 @@ export const mockRanges: RangeChart[] = [
       ["AA","KK","QQ","JJ","TT","AKs","AQs","AJs","A5s","A4s","KQs","AKo","AQo"]
     ),
     createdBy: "p1", createdAt: "2025-01-05T00:00:00Z",
+  },
+];
+
+// ===== Opponent Notes (Team Intelligence) =====
+
+export const mockOpponentNotes: OpponentNote[] = [
+  {
+    id: "opp1",
+    opponentName: "山田さん",
+    spotId: "roots",
+    tags: ["CALLING_STATION", "WEAK_POSTFLOP"],
+    notes: "プリフロップは広くコール。フロップ以降はペアがないと降りる。2バレルで落ちやすい。",
+    stakes: "100/200",
+    lastSeen: "2025-02-01",
+    createdBy: "p1",
+    createdAt: "2025-01-15T00:00:00Z",
+    updatedAt: "2025-02-01T00:00:00Z",
+  },
+  {
+    id: "opp2",
+    opponentName: "Kenさん",
+    spotId: "roots",
+    tags: ["REG", "TAG", "POSITIONAL_AWARE"],
+    notes: "堅いレギュラー。IPからのCBET頻度が高い。OOPではチェックレイズが多い。3BETレンジは狭い。",
+    stakes: "200/400",
+    lastSeen: "2025-01-25",
+    createdBy: "p1",
+    createdAt: "2025-01-10T00:00:00Z",
+    updatedAt: "2025-01-25T00:00:00Z",
+  },
+  {
+    id: "opp3",
+    opponentName: "マサ",
+    spotId: "poker-live",
+    tags: ["FISH", "TILT_PRONE"],
+    notes: "ルースパッシブ。大きなポットを負けるとティルト気味になる。ティルト時はブラフキャッチが増える。",
+    stakes: "100/200",
+    lastSeen: "2025-01-28",
+    createdBy: "p3",
+    createdAt: "2025-01-20T00:00:00Z",
+    updatedAt: "2025-01-28T00:00:00Z",
+  },
+  {
+    id: "opp4",
+    opponentName: "タツヤ",
+    spotId: "ggpl",
+    tags: ["LAG", "BLUFF_HEAVY", "OVERBET_FREQ"],
+    notes: "アグレッシブなLAG。リバーのオーバーベットが多いがブラフ頻度も高い。コールダウンが有効。",
+    stakes: "200/400",
+    lastSeen: "2025-02-03",
+    createdBy: "p2",
+    createdAt: "2025-01-05T00:00:00Z",
+    updatedAt: "2025-02-03T00:00:00Z",
+  },
+  {
+    id: "opp5",
+    opponentName: "ユウキ先輩",
+    spotId: "blow",
+    tags: ["NITS", "SLOW_PLAY_HEAVY"],
+    notes: "極端にタイト。プリフロップのレンジが非常に狭い。レイズにはモンスター警戒。スロープレイ多用。",
+    stakes: "100/200",
+    lastSeen: "2025-01-20",
+    createdBy: "p4",
+    createdAt: "2024-12-15T00:00:00Z",
+    updatedAt: "2025-01-20T00:00:00Z",
+  },
+];
+
+// ===== Member Activity (Pulse Data) =====
+
+export const mockMemberActivity: MemberActivity[] = [
+  {
+    playerId: "p1",
+    lastSessionDate: "2025-02-08",
+    lastSpotId: "roots",
+    currentStreak: 3,
+    weeklyHours: 18,
+    weeklyProfit: 96950,
+    status: "on-fire",
+  },
+  {
+    playerId: "p2",
+    lastSessionDate: "2025-02-05",
+    lastSpotId: "ggpl",
+    currentStreak: 1,
+    weeklyHours: 10,
+    weeklyProfit: 15000,
+    status: "active",
+  },
+  {
+    playerId: "p3",
+    lastSessionDate: "2025-01-28",
+    lastSpotId: "poker-live",
+    currentStreak: -2,
+    weeklyHours: 5,
+    weeklyProfit: -7500,
+    status: "cooling-down",
+  },
+  {
+    playerId: "p4",
+    lastSessionDate: "2025-01-20",
+    lastSpotId: "blow",
+    currentStreak: 0,
+    weeklyHours: 0,
+    weeklyProfit: 0,
+    status: "resting",
   },
 ];

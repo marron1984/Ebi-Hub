@@ -25,48 +25,54 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  /* Poker-specific theme colors */
-  --color-emerald: #10B981;
-  --color-emerald-light: #34D399;
-  --color-emerald-dark: #059669;
+  /* Poker-specific theme colors — パッキリ high-contrast */
+  --color-emerald: var(--accent-main);
+  --color-emerald-light: var(--accent-light);
+  --color-emerald-dark: var(--accent-dark);
   --color-crimson: #DC2626;
   --color-crimson-light: #EF4444;
   --color-crimson-dark: #B91C1C;
   --color-gold: #F59E0B;
   --color-gold-light: #FBBF24;
 
-  --radius-lg: 0.75rem;
-  --radius-md: 0.5rem;
+  --radius-lg: 0.5rem;
+  --radius-md: 0.375rem;
   --radius-sm: 0.25rem;
 }
 
 /* ========================================
-   白銀 (Hakugin) - Light Mode
+   白銀 (Hakugin) - Light Mode — パッキリ
+   Accent: Royal Blue #2563EB
    ======================================== */
 :root {
-  --background: #F9FAFB;
-  --foreground: #1E293B;
+  --background: #F8FAFC;
+  --foreground: #0F172A;
   --card: #FFFFFF;
-  --card-foreground: #1E293B;
+  --card-foreground: #0F172A;
   --popover: #FFFFFF;
-  --popover-foreground: #1E293B;
-  --primary: #10B981;
+  --popover-foreground: #0F172A;
+  --primary: #2563EB;
   --primary-foreground: #FFFFFF;
   --secondary: #F1F5F9;
-  --secondary-foreground: #1E293B;
+  --secondary-foreground: #0F172A;
   --muted: #F1F5F9;
   --muted-foreground: #64748B;
   --accent: #F1F5F9;
-  --accent-foreground: #1E293B;
+  --accent-foreground: #0F172A;
   --destructive: #DC2626;
   --destructive-foreground: #FFFFFF;
   --border: #E2E8F0;
   --input: #E2E8F0;
-  --ring: #10B981;
+  --ring: #2563EB;
+
+  --accent-main: #2563EB;
+  --accent-light: #3B82F6;
+  --accent-dark: #1D4ED8;
 }
 
 /* ========================================
-   墨黒 (Sumikuro) - Dark Mode
+   墨黒 (Sumikuro) - Dark Mode — パッキリ
+   Accent: Neon Emerald #00FF9F
    ======================================== */
 .dark {
   --background: #020617;
@@ -75,8 +81,8 @@
   --card-foreground: #F8FAFC;
   --popover: #0F172A;
   --popover-foreground: #F8FAFC;
-  --primary: #10B981;
-  --primary-foreground: #FFFFFF;
+  --primary: #00FF9F;
+  --primary-foreground: #020617;
   --secondary: #1E293B;
   --secondary-foreground: #F8FAFC;
   --muted: #1E293B;
@@ -87,7 +93,11 @@
   --destructive-foreground: #FFFFFF;
   --border: #1E293B;
   --input: #1E293B;
-  --ring: #10B981;
+  --ring: #00FF9F;
+
+  --accent-main: #00FF9F;
+  --accent-light: #34FFBA;
+  --accent-dark: #00CC7F;
 }
 
 * {
@@ -102,46 +112,14 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Glass-morphism utility */
-.glass {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.dark .glass {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-}
-
-:root .glass {
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-}
-
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 5px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--muted-foreground);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--foreground);
-}
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--muted-foreground); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--foreground); }
 
 /* ========================================
-   Number font - tabular nums for aligned digits
-   Uses JetBrains Mono for precise number display
+   Number font
    ======================================== */
 .font-number {
   font-family: var(--font-mono);
@@ -150,43 +128,24 @@ body {
 }
 
 /* ========================================
-   Visual Feedback - Profit/Loss Glow Effects
+   パッキリ Visual Feedback — sharp borders, no shadows
    ======================================== */
-
-/* Emerald glow for positive results */
 .profit-glow {
-  box-shadow: 0 0 12px rgba(16, 185, 129, 0.15),
-              0 0 4px rgba(16, 185, 129, 0.1);
-  transition: box-shadow 0.3s ease;
+  border-left: 2px solid var(--accent-main);
+  transition: border-color 0.2s ease;
 }
+.profit-glow:hover { border-left-width: 3px; }
 
-.profit-glow:hover {
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.25),
-              0 0 8px rgba(16, 185, 129, 0.15);
-}
-
-/* Rose-red transparency for negative results */
 .loss-glow {
-  box-shadow: 0 0 12px rgba(220, 38, 38, 0.1),
-              0 0 4px rgba(220, 38, 38, 0.08);
-  transition: box-shadow 0.3s ease;
+  border-left: 2px solid #DC2626;
+  transition: border-color 0.2s ease;
 }
+.loss-glow:hover { border-left-width: 3px; }
 
-.loss-glow:hover {
-  box-shadow: 0 0 20px rgba(220, 38, 38, 0.18),
-              0 0 8px rgba(220, 38, 38, 0.12);
-}
-
-/* Large profit card glow (dashboard stats) */
-.dark .profit-glow-lg {
-  box-shadow: 0 0 30px rgba(16, 185, 129, 0.12),
-              0 4px 20px rgba(16, 185, 129, 0.08);
-}
-
-.dark .loss-glow-lg {
-  box-shadow: 0 0 30px rgba(220, 38, 38, 0.08),
-              0 4px 20px rgba(220, 38, 38, 0.06);
-}
+.dark .profit-glow-lg { border: 1px solid rgba(0, 255, 159, 0.3); }
+:root .profit-glow-lg { border: 1px solid rgba(37, 99, 235, 0.3); }
+.dark .loss-glow-lg { border: 1px solid rgba(220, 38, 38, 0.2); }
+:root .loss-glow-lg { border: 1px solid rgba(220, 38, 38, 0.2); }
 
 /* Privacy blur */
 .privacy-blur {
@@ -194,10 +153,28 @@ body {
   user-select: none;
   transition: filter 0.3s ease;
 }
+.privacy-blur:hover { filter: blur(4px); }
 
-.privacy-blur:hover {
-  filter: blur(4px);
+/* ========================================
+   Member pulse effect (team intelligence)
+   ======================================== */
+@keyframes pulse-ring {
+  0% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.5); }
 }
+
+.member-pulse { position: relative; }
+.member-pulse::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 2px solid var(--accent-main);
+  animation: pulse-ring 2s ease-out infinite;
+  pointer-events: none;
+}
+.member-pulse-win::after { border-color: var(--accent-main); }
+.member-pulse-loss::after { border-color: #DC2626; }
 
 /* ========================================
    Markdown content styling
@@ -212,12 +189,13 @@ body {
 .markdown-content code {
   background: var(--muted);
   padding: 0.15em 0.4em;
-  border-radius: 4px;
+  border-radius: 3px;
   font-size: 0.9em;
   font-family: var(--font-mono);
+  border: 1px solid var(--border);
 }
 .markdown-content blockquote {
-  border-left: 3px solid var(--primary);
+  border-left: 2px solid var(--primary);
   padding-left: 1em;
   margin: 0.5em 0;
   color: var(--muted-foreground);
@@ -225,13 +203,13 @@ body {
 .markdown-content strong { font-weight: 700; }
 .markdown-content em { font-style: italic; }
 .markdown-content img {
-  border-radius: 8px;
+  border-radius: 4px;
   max-width: 100%;
   margin: 0.5em 0;
   border: 1px solid var(--border);
 }
 
-/* LaTeX math styling */
+/* LaTeX math */
 .markdown-content .math-inline {
   font-family: var(--font-mono);
   font-size: 0.9em;
@@ -239,56 +217,51 @@ body {
   padding: 0.1em 0.3em;
   border-radius: 3px;
   color: var(--primary);
+  border: 1px solid var(--border);
   white-space: nowrap;
 }
-
 .markdown-content .math-block {
   font-family: var(--font-mono);
   font-size: 0.95em;
   background: var(--muted);
   padding: 0.8em 1em;
-  border-radius: 6px;
+  border-radius: 4px;
   margin: 0.5em 0;
   color: var(--primary);
   text-align: center;
   overflow-x: auto;
-}
-
-/* ========================================
-   Image attachment styling
-   ======================================== */
-.image-attachment {
-  position: relative;
-  border-radius: 8px;
-  overflow: hidden;
   border: 1px solid var(--border);
 }
 
-.image-attachment img {
-  width: 100%;
-  height: auto;
-  display: block;
+/* Image attachment */
+.image-attachment {
+  position: relative;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--border);
 }
-
+.image-attachment img { width: 100%; height: auto; display: block; }
 .image-attachment .overlay {
-  position: absolute;
-  inset: 0;
+  position: absolute; inset: 0;
   background: rgba(0, 0, 0, 0.4);
-  opacity: 0;
-  transition: opacity 0.2s;
-  display: flex;
+  opacity: 0; transition: opacity 0.2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.image-attachment:hover .overlay { opacity: 1; }
+
+/* Currency flag */
+.currency-flag { font-size: 1.2em; line-height: 1; }
+
+/* Spot badge */
+.spot-badge {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-}
-
-.image-attachment:hover .overlay {
-  opacity: 1;
-}
-
-/* ========================================
-   Currency flag styling
-   ======================================== */
-.currency-flag {
-  font-size: 1.2em;
-  line-height: 1;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border: 1px solid var(--border);
+  background: var(--muted);
 }

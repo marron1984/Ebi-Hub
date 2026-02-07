@@ -29,12 +29,12 @@ export function Sidebar() {
   return (
     <aside className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r bg-card">
       <div className="flex h-16 items-center gap-3 border-b px-6">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald text-white">
+        <div className="flex h-8 w-8 items-center justify-center rounded-md border border-emerald/30 bg-emerald/10 text-emerald">
           <Spade className="h-5 w-5" />
         </div>
         <div>
-          <h1 className="text-sm font-bold tracking-tight">POKER TEAM HUB</h1>
-          <p className="text-[10px] text-muted-foreground">戦略家の書斎</p>
+          <h1 className="text-sm font-bold tracking-tight">Ebi-Hub</h1>
+          <p className="text-[10px] text-muted-foreground">Poker Team OS</p>
         </div>
       </div>
 
@@ -47,9 +47,9 @@ export function Sidebar() {
               key={item.name}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
                 isActive
-                  ? "bg-emerald/10 text-emerald"
+                  ? "bg-emerald/10 text-emerald border border-emerald/20"
                   : "text-muted-foreground hover:bg-accent hover:text-foreground"
               )}
             >
@@ -63,7 +63,7 @@ export function Sidebar() {
       <div className="border-t p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald/20 text-sm font-bold text-emerald">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full border border-emerald/30 text-sm font-bold text-emerald">
               武
             </div>
             <div>
