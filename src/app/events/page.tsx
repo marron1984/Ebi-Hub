@@ -134,8 +134,8 @@ export default function EventsPage() {
     );
 
   return (
-    <div className="min-h-screen bg-[#F1F5F9] dark:bg-[#020617]">
-      <div className="mx-auto max-w-5xl px-4 py-8">
+    <div className="mx-auto max-w-5xl">
+      <div>
         {/* ===== Airport Board Header ===== */}
         <header className="mb-8">
           <div className="flex items-center justify-between">

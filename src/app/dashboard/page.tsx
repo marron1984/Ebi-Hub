@@ -3,8 +3,8 @@
 import {
   DollarSign, Clock, TrendingUp, Trophy, Target, Flame,
   ArrowUpRight, ArrowDownRight, MapPin,
-  Play, Square, BookOpen, MessageSquare, Eye,
-  Radio, Calendar, ChevronRight, Zap,
+  BookOpen, MessageSquare,
+  Radio, Calendar, ChevronRight, Zap, Send,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,8 +16,10 @@ import { StatsCard } from "@/components/poker/stats-card";
 import { ProfitChart } from "@/components/poker/profit-chart";
 import { SessionTable } from "@/components/poker/session-table";
 import { PrivacyToggle } from "@/components/poker/privacy-toggle";
+import { CardGroup } from "@/components/poker/card-display";
+import { BroadcastButton } from "@/components/share/broadcast-button";
 import {
-  mockSessions, mockStats, mockActivities,
+  mockSessions, mockStats, mockActivities, mockHands,
   mockTournaments, mockDailyEvents,
 } from "@/lib/mock-data";
 import Link from "next/link";
@@ -28,10 +30,11 @@ import {
   getCurrencyFlag,
 } from "@/lib/currency";
 import type { PokerCurrency } from "@/lib/currency";
-import { formatDuration } from "@/lib/utils";
+import { formatDuration, formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { useState, useMemo } from "react";
 import type { GameType, Venue } from "@/types/poker";
+import { TAG_LABELS_JA } from "@/types/poker";
 import { OSAKA_SPOTS } from "@/lib/poker-spots";
 import { calculateCountdown } from "@/lib/intelligence";
 
@@ -100,16 +103,14 @@ export default function DashboardPage() {
     return acc;
   }, {});
 
-  // ---------- Tournament data with countdowns ----------
+  // ---------- Tournament data ----------
   const now = useMemo(() => new Date(), []);
-
   const registrationOpenTournaments = mockTournaments.filter(
     (t) => t.status === "registration_open",
   );
   const upcomingTournaments = mockTournaments.filter(
     (t) => t.status === "upcoming",
   );
-
   const tournamentCountdowns = useMemo(
     () =>
       upcomingTournaments.map((t) => ({
@@ -166,220 +167,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ============================================================ */}
-      {/* ===== TODAY'S MAJOR TOURNAMENTS & OSAKA EVENTS (TOP) ===== */}
-      {/* ============================================================ */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <Calendar className="h-5 w-5 text-emerald" />
-            <h2 className="text-lg font-bold tracking-tight">
-              今日の大型大会 &amp; 大阪イベント
-            </h2>
-            {registrationOpenTournaments.length > 0 && (
-              <span className="flex items-center gap-1 rounded-full border border-emerald/30 bg-emerald/10 px-2.5 py-0.5 text-[10px] font-bold text-emerald">
-                <Radio className="h-2.5 w-2.5 animate-pulse" />
-                LIVE
-              </span>
-            )}
-          </div>
-          <Link
-            href="/events"
-            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-emerald transition-colors"
-          >
-            全イベント <ChevronRight className="h-3 w-3" />
-          </Link>
-        </div>
-
-        {/* Registration-open tournaments — neon glow border */}
-        {registrationOpenTournaments.length > 0 && (
-          <div className="space-y-3 mb-4">
-            {registrationOpenTournaments.map((t) => (
-              <div
-                key={t.id}
-                className="relative rounded-md border p-4 bg-card animate-in fade-in"
-                style={{
-                  borderColor: `${t.accentColor}66`,
-                  borderLeftWidth: 3,
-                  borderLeftColor: t.accentColor,
-                  boxShadow: "none",
-                }}
-              >
-                {/* Animated neon border glow via pseudo-element trick using outline */}
-                <div
-                  className="pointer-events-none absolute inset-0 rounded-md animate-pulse"
-                  style={{
-                    outline: `1px solid ${t.accentColor}40`,
-                    outlineOffset: "1px",
-                  }}
-                />
-                <div className="flex items-center gap-2 mb-1.5">
-                  <Zap className="h-4 w-4" style={{ color: t.accentColor }} />
-                  <span className="text-sm font-bold">{t.name}</span>
-                  <span
-                    className="ml-auto flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold"
-                    style={{
-                      borderColor: `${t.accentColor}66`,
-                      color: t.accentColor,
-                    }}
-                  >
-                    <Radio className="h-2 w-2 animate-pulse" />
-                    レジスト受付中
-                  </span>
-                </div>
-                <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <MapPin className="h-3 w-3" />
-                    {t.spotName}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    締切 {t.registrationEnd?.split("T")[1]}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <DollarSign className="h-3 w-3" />
-                    ¥{t.buyInJpy.toLocaleString()}
-                  </span>
-                  {t.guaranteeJpy && (
-                    <span className="font-number text-emerald">
-                      GTD ¥{t.guaranteeJpy.toLocaleString()}
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Upcoming major tournaments with countdown */}
-        {tournamentCountdowns.length > 0 && (
-          <div className="space-y-2 mb-4">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-              今後の大型大会
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {tournamentCountdowns.map(({ tournament: t, countdown }) => (
-                <div
-                  key={t.id}
-                  className={cn(
-                    "rounded-md border p-3 bg-card",
-                    countdown.isUrgent && "border-crimson/40"
-                  )}
-                  style={{
-                    borderLeftWidth: 3,
-                    borderLeftColor: t.accentColor,
-                  }}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="min-w-0">
-                      <span className="text-sm font-bold">{t.name}</span>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                        <MapPin className="h-3 w-3 shrink-0" />
-                        {t.spotName}
-                        <DollarSign className="h-3 w-3 shrink-0" />
-                        ¥{t.buyInJpy.toLocaleString()}
-                      </div>
-                      {t.guaranteeJpy && (
-                        <div className="text-[10px] text-emerald font-number mt-0.5">
-                          GTD ¥{t.guaranteeJpy.toLocaleString()}
-                        </div>
-                      )}
-                    </div>
-                    <div className="text-right shrink-0 ml-3">
-                      {countdown.isUrgent ? (
-                        <span className="text-sm font-bold text-crimson">
-                          あと{countdown.hoursUntil}時間
-                        </span>
-                      ) : (
-                        <span className="text-sm font-bold text-muted-foreground">
-                          あと{countdown.daysUntil}日
-                        </span>
-                      )}
-                      <div className="text-[10px] text-muted-foreground mt-0.5">
-                        {t.startDate}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Daily events compact grid */}
-        <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-            本日のイベント
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {mockDailyEvents.slice(0, 8).map((e) => {
-              const typeColor =
-                e.eventType === "tournament"
-                  ? "text-emerald"
-                  : e.eventType === "freeroll"
-                    ? "text-emerald"
-                    : e.eventType === "league"
-                      ? "text-[#8B5CF6]"
-                      : "text-gold";
-              const typeLabel =
-                e.eventType === "tournament"
-                  ? "大会"
-                  : e.eventType === "cash_game"
-                    ? "キャッシュ"
-                    : e.eventType === "freeroll"
-                      ? "フリーロール"
-                      : e.eventType === "league"
-                        ? "リーグ"
-                        : "特別";
-              return (
-                <div
-                  key={e.id}
-                  className="flex items-center gap-2 rounded-md border p-2 bg-card"
-                >
-                  <span className="spot-badge">{e.spotName}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium truncate">{e.title}</p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {e.startTime}
-                      {e.endTime ? ` ~ ${e.endTime}` : ""}
-                    </p>
-                  </div>
-                  <Badge
-                    variant="outline"
-                    className={cn("text-[10px] shrink-0", typeColor)}
-                  >
-                    {typeLabel}
-                  </Badge>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ===== Spot Filter ===== */}
-      <div className="flex flex-wrap gap-1.5">
-        <Badge
-          variant={spotFilter === "all" ? "default" : "outline"}
-          className="cursor-pointer"
-          onClick={() => setSpotFilter("all")}
-        >
-          全スポット
-        </Badge>
-        {OSAKA_SPOTS.map((spot) => (
-          <Badge
-            key={spot.id}
-            variant={spotFilter === spot.id ? "default" : "outline"}
-            className="cursor-pointer text-xs"
-            onClick={() => setSpotFilter(spot.id)}
-          >
-            <MapPin className="mr-1 h-3 w-3" />
-            {spot.shortName}
-          </Badge>
-        ))}
-      </div>
-
-      {/* ===== Stats Cards ===== */}
+      {/* ===== 1. PERSONAL STATS (TOP) ===== */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title="累積収支(JPY)"
@@ -423,7 +211,7 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* ===== Charts & Session History ===== */}
+      {/* ===== 2. CHART & SESSION HISTORY ===== */}
       <Tabs defaultValue="chart" className="space-y-4">
         <TabsList>
           <TabsTrigger value="chart">
@@ -481,241 +269,420 @@ export default function DashboardPage() {
         </TabsContent>
       </Tabs>
 
-      {/* ===== Breakdown Grid ===== */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {/* Venue */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">会場別</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {(["live", "online"] as const).map((venue) => {
-                const venueProfit = filteredSessions
-                  .filter((s) => s.venue === venue)
-                  .reduce((sum, s) => sum + s.profitJpy, 0);
-                const count = filteredSessions.filter(
-                  (s) => s.venue === venue,
-                ).length;
-                const label = venue === "live" ? "ライブ" : "オンライン";
-                return (
-                  <div
-                    key={venue}
-                    className="flex items-center justify-between rounded-md border p-3"
-                  >
-                    <div>
-                      <p className="text-sm font-medium">{label}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {count} セッション
-                      </p>
-                    </div>
-                    <span
-                      className={cn(
-                        "font-number text-sm font-bold",
-                        venueProfit >= 0 ? "text-emerald" : "text-crimson"
-                      )}
-                    >
-                      {formatJpy(venueProfit, privacy)}
+      {/* ===== 3. RECENT HAND REVIEWS (Main Feature) ===== */}
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <BookOpen className="h-5 w-5 text-emerald" />
+            <h2 className="text-lg font-bold tracking-tight">
+              最近のハンドレビュー
+            </h2>
+          </div>
+          <Link
+            href="/hands"
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-emerald transition-colors"
+          >
+            全ハンド <ChevronRight className="h-3 w-3" />
+          </Link>
+        </div>
+
+        <div className="space-y-3">
+          {mockHands.slice(0, 3).map((hand) => (
+            <Link
+              key={hand.id}
+              href="/hands"
+              className="block rounded-md border p-4 bg-card transition-colors hover:border-emerald/30"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0 flex-1 space-y-2">
+                  <div className="flex items-center gap-3">
+                    <CardGroup cards={hand.heroCards} size="sm" />
+                    <Badge variant="outline" className="text-xs">
+                      {hand.heroPosition}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {hand.stakes} {hand.gameType}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(hand.date).toLocaleDateString("ja-JP", {
+                        month: "short", day: "numeric",
+                      })}
                     </span>
                   </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Game Type */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">ゲーム種別</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {(["NLH", "PLO", "PLO5"] as const).map((game) => {
-                const gameProfit = filteredSessions
-                  .filter((s) => s.gameType === game)
-                  .reduce((sum, s) => sum + s.profitJpy, 0);
-                const count = filteredSessions.filter(
-                  (s) => s.gameType === game,
-                ).length;
-                if (count === 0) return null;
-                return (
-                  <div
-                    key={game}
-                    className="flex items-center justify-between rounded-md border p-3"
-                  >
-                    <div>
-                      <p className="text-sm font-medium">{game}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {count} セッション
-                      </p>
-                    </div>
-                    <span
-                      className={cn(
-                        "font-number text-sm font-bold",
-                        gameProfit >= 0 ? "text-emerald" : "text-crimson"
-                      )}
-                    >
-                      {formatJpy(gameProfit, privacy)}
-                    </span>
+                  <div className="flex flex-wrap gap-1">
+                    {hand.tags.slice(0, 4).map((tag) => (
+                      <Badge key={tag} variant="secondary" className="text-[10px] px-1.5 py-0">
+                        #{TAG_LABELS_JA[tag]}
+                      </Badge>
+                    ))}
                   </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+                  {hand.notes && (
+                    <p className="text-xs text-muted-foreground truncate">{hand.notes}</p>
+                  )}
+                  {hand.comments.length > 0 && (
+                    <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                      <MessageSquare className="h-3 w-3" />
+                      {hand.comments.length}件のコメント
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-col items-end gap-2 shrink-0">
+                  <span className={cn("font-number text-base font-bold", hand.result >= 0 ? "text-emerald" : "text-crimson")}>
+                    {formatCurrency(hand.result, hand.currency)}
+                  </span>
+                  <BroadcastButton
+                    type="hand_review"
+                    handId={hand.id}
+                    handSummary={hand.notes}
+                    profitJpy={hand.result * (hand.currency === "JPY" ? 1 : 150)}
+                    tags={hand.tags}
+                    className="h-7 text-[10px]"
+                  />
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
 
-        {/* Spot Breakdown */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">スポット別</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {Object.entries(spotMap)
-                .sort(([, a], [, b]) => b.jpyTotal - a.jpyTotal)
-                .map(([key, data]) => {
-                  const spot = OSAKA_SPOTS.find((s) => s.id === key);
-                  const label = spot ? spot.shortName : "その他";
+      {/* ===== 4. TWO-COLUMN: Breakdowns + Events ===== */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Left: Breakdowns (2 cols on lg) */}
+        <div className="space-y-4 lg:col-span-2">
+          {/* Spot Filter */}
+          <div className="flex flex-wrap gap-1.5">
+            <Badge
+              variant={spotFilter === "all" ? "default" : "outline"}
+              className="cursor-pointer"
+              onClick={() => setSpotFilter("all")}
+            >
+              全スポット
+            </Badge>
+            {OSAKA_SPOTS.map((spot) => (
+              <Badge
+                key={spot.id}
+                variant={spotFilter === spot.id ? "default" : "outline"}
+                className="cursor-pointer text-xs"
+                onClick={() => setSpotFilter(spot.id)}
+              >
+                <MapPin className="mr-1 h-3 w-3" />
+                {spot.shortName}
+              </Badge>
+            ))}
+          </div>
+
+          {/* Breakdown grid */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {/* Venue */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">会場別</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {(["live", "online"] as const).map((venue) => {
+                    const venueProfit = filteredSessions
+                      .filter((s) => s.venue === venue)
+                      .reduce((sum, s) => sum + s.profitJpy, 0);
+                    const count = filteredSessions.filter(
+                      (s) => s.venue === venue,
+                    ).length;
+                    const label = venue === "live" ? "ライブ" : "オンライン";
+                    return (
+                      <div
+                        key={venue}
+                        className="flex items-center justify-between rounded-md border p-3"
+                      >
+                        <div>
+                          <p className="text-sm font-medium">{label}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {count} セッション
+                          </p>
+                        </div>
+                        <span
+                          className={cn(
+                            "font-number text-sm font-bold",
+                            venueProfit >= 0 ? "text-emerald" : "text-crimson"
+                          )}
+                        >
+                          {formatJpy(venueProfit, privacy)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Game Type */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">ゲーム種別</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {(["NLH", "PLO", "PLO5"] as const).map((game) => {
+                    const gameProfit = filteredSessions
+                      .filter((s) => s.gameType === game)
+                      .reduce((sum, s) => sum + s.profitJpy, 0);
+                    const count = filteredSessions.filter(
+                      (s) => s.gameType === game,
+                    ).length;
+                    if (count === 0) return null;
+                    return (
+                      <div
+                        key={game}
+                        className="flex items-center justify-between rounded-md border p-3"
+                      >
+                        <div>
+                          <p className="text-sm font-medium">{game}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {count} セッション
+                          </p>
+                        </div>
+                        <span
+                          className={cn(
+                            "font-number text-sm font-bold",
+                            gameProfit >= 0 ? "text-emerald" : "text-crimson"
+                          )}
+                        >
+                          {formatJpy(gameProfit, privacy)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Spot Breakdown */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">スポット別</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {Object.entries(spotMap)
+                    .sort(([, a], [, b]) => b.jpyTotal - a.jpyTotal)
+                    .map(([key, data]) => {
+                      const spot = OSAKA_SPOTS.find((s) => s.id === key);
+                      const label = spot ? spot.shortName : "その他";
+                      return (
+                        <div
+                          key={key}
+                          className="flex items-center justify-between rounded-md border p-3"
+                        >
+                          <div>
+                            <p className="text-sm font-medium">{label}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {data.count} セッション
+                            </p>
+                          </div>
+                          <span
+                            className={cn(
+                              "font-number text-sm font-bold",
+                              data.jpyTotal >= 0 ? "text-emerald" : "text-crimson"
+                            )}
+                          >
+                            {formatJpy(data.jpyTotal, privacy)}
+                          </span>
+                        </div>
+                      );
+                    })}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Currency Summary */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">通貨別サマリー</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {currencySummary.map(([currency, data]) => {
+                  const info = POKER_CURRENCIES[currency as PokerCurrency];
+                  const flag = getCurrencyFlag(currency as PokerCurrency);
                   return (
                     <div
-                      key={key}
+                      key={currency}
                       className="flex items-center justify-between rounded-md border p-3"
                     >
-                      <div>
-                        <p className="text-sm font-medium">{label}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {data.count} セッション
-                        </p>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">{flag}</span>
+                        <div>
+                          <p className="text-sm font-medium">
+                            {info.nameJa} ({currency})
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {data.count} セッション
+                          </p>
+                        </div>
                       </div>
-                      <span
-                        className={cn(
-                          "font-number text-sm font-bold",
-                          data.jpyTotal >= 0 ? "text-emerald" : "text-crimson"
+                      <div className="text-right">
+                        <p
+                          className={cn(
+                            "font-number text-sm font-bold",
+                            data.jpyTotal >= 0 ? "text-emerald" : "text-crimson"
+                          )}
+                        >
+                          {formatJpy(data.jpyTotal, privacy)}
+                        </p>
+                        {currency !== "JPY" && (
+                          <p className="font-number text-xs text-muted-foreground">
+                            {privacy
+                              ? "***"
+                              : `${data.originalTotal >= 0 ? "+" : ""}${info.symbol}${Math.abs(data.originalTotal).toLocaleString()}`}
+                          </p>
                         )}
-                      >
-                        {formatJpy(data.jpyTotal, privacy)}
-                      </span>
+                      </div>
                     </div>
                   );
                 })}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* ===== Currency Summary ===== */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">通貨別サマリー</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {currencySummary.map(([currency, data]) => {
-              const info = POKER_CURRENCIES[currency as PokerCurrency];
-              const flag = getCurrencyFlag(currency as PokerCurrency);
-              return (
-                <div
-                  key={currency}
-                  className="flex items-center justify-between rounded-md border p-3"
+        {/* Right: Events Sidebar + Activity (1 col on lg) */}
+        <div className="space-y-4">
+          {/* Event Intelligence Compact */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center justify-between text-base">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-emerald" />
+                  イベント
+                  {registrationOpenTournaments.length > 0 && (
+                    <span className="flex items-center gap-1 rounded-full border border-emerald/30 bg-emerald/10 px-2 py-0.5 text-[10px] font-bold text-emerald">
+                      <Radio className="h-2 w-2 animate-pulse" />
+                      LIVE
+                    </span>
+                  )}
+                </div>
+                <Link
+                  href="/events"
+                  className="flex items-center gap-0.5 text-xs font-normal text-muted-foreground hover:text-emerald transition-colors"
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="text-xl">{flag}</span>
-                    <div>
-                      <p className="text-sm font-medium">
-                        {info.nameJa} ({currency})
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {data.count} セッション
-                      </p>
-                    </div>
+                  詳細 <ChevronRight className="h-3 w-3" />
+                </Link>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {/* Registration-open tournaments */}
+              {registrationOpenTournaments.map((t) => (
+                <div
+                  key={t.id}
+                  className="rounded-md border p-3"
+                  style={{
+                    borderLeftWidth: 3,
+                    borderLeftColor: t.accentColor,
+                  }}
+                >
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Zap className="h-3 w-3" style={{ color: t.accentColor }} />
+                    <span className="text-xs font-bold truncate">{t.name}</span>
                   </div>
-                  <div className="text-right">
-                    <p
-                      className={cn(
-                        "font-number text-sm font-bold",
-                        data.jpyTotal >= 0 ? "text-emerald" : "text-crimson"
-                      )}
-                    >
-                      {formatJpy(data.jpyTotal, privacy)}
-                    </p>
-                    {currency !== "JPY" && (
-                      <p className="font-number text-xs text-muted-foreground">
-                        {privacy
-                          ? "***"
-                          : `${data.originalTotal >= 0 ? "+" : ""}${info.symbol}${Math.abs(data.originalTotal).toLocaleString()}`}
-                      </p>
+                  <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                    <span>{t.spotName}</span>
+                    <span className="font-number">¥{t.buyInJpy.toLocaleString()}</span>
+                    {t.guaranteeJpy && (
+                      <span className="font-number text-emerald">GTD ¥{t.guaranteeJpy.toLocaleString()}</span>
                     )}
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+              ))}
 
-      {/* ===== Activity Feed ===== */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">アクティビティ</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-0">
-            {mockActivities.slice(0, 8).map((activity) => {
-              const iconMap = {
-                session_start: Play,
-                session_end: Square,
-                hand_review: BookOpen,
-                opponent_note: Eye,
-                comment: MessageSquare,
-              };
-              const Icon = iconMap[activity.type];
-              const isProfit = activity.metadata?.profitJpy !== undefined && activity.metadata.profitJpy >= 0;
-              const isLoss = activity.metadata?.profitJpy !== undefined && activity.metadata.profitJpy < 0;
+              {/* Upcoming tournaments compact */}
+              {tournamentCountdowns.slice(0, 3).map(({ tournament: t, countdown }) => (
+                <div
+                  key={t.id}
+                  className="flex items-center justify-between rounded-md border p-2"
+                  style={{
+                    borderLeftWidth: 3,
+                    borderLeftColor: t.accentColor,
+                  }}
+                >
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold truncate">{t.name}</p>
+                    <p className="text-[10px] text-muted-foreground">{t.spotName} · ¥{t.buyInJpy.toLocaleString()}</p>
+                  </div>
+                  <span className={cn(
+                    "text-xs font-bold shrink-0 ml-2",
+                    countdown.isUrgent ? "text-crimson" : "text-muted-foreground"
+                  )}>
+                    {countdown.isUrgent ? `あと${countdown.hoursUntil}h` : `あと${countdown.daysUntil}日`}
+                  </span>
+                </div>
+              ))}
 
-              // Relative time
-              const refNow = new Date("2025-02-07T18:00:00Z");
-              const then = new Date(activity.createdAt);
-              const diffMs = refNow.getTime() - then.getTime();
-              const diffMin = Math.floor(diffMs / 60000);
-              const diffHr = Math.floor(diffMin / 60);
-              const diffDay = Math.floor(diffHr / 24);
-              const timeStr = diffDay > 0 ? `${diffDay}日前` : diffHr > 0 ? `${diffHr}時間前` : `${diffMin}分前`;
-
-              return (
-                <div key={activity.id} className="flex items-start gap-3 py-3 border-b border-border/50 last:border-0">
-                  <div className="relative mt-0.5">
+              {/* Today's events compact */}
+              <div className="border-t pt-3">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
+                  本日のイベント
+                </p>
+                <div className="space-y-1.5">
+                  {mockDailyEvents.slice(0, 6).map((e) => (
                     <div
-                      className="flex h-8 w-8 items-center justify-center rounded-full text-[10px] font-bold text-white"
-                      style={{ backgroundColor: activity.userColor }}
+                      key={e.id}
+                      className="flex items-center gap-2 rounded border p-2"
                     >
-                      {activity.userInitial}
+                      <span className="font-number text-[10px] font-bold w-10 shrink-0">{e.startTime}</span>
+                      <span className="spot-badge">{e.spotName}</span>
+                      <span className="text-[10px] truncate flex-1">{e.title}</span>
                     </div>
-                    <div className={cn(
-                      "absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full border-2 border-background",
-                      activity.type === "session_start" ? "bg-emerald/20 text-emerald" :
-                      activity.type === "session_end" ? (isLoss ? "bg-crimson/20 text-crimson" : "bg-emerald/20 text-emerald") :
-                      "bg-muted text-muted-foreground"
-                    )}>
-                      <Icon className="h-2.5 w-2.5" />
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium truncate">{activity.userName.split(" ")[0]}</span>
-                      <span className="text-[10px] text-muted-foreground">{activity.title}</span>
-                      <span className="ml-auto text-[10px] text-muted-foreground shrink-0">{timeStr}</span>
-                    </div>
-                    {activity.detail && (
-                      <p className="text-xs text-muted-foreground mt-0.5 truncate">{activity.detail}</p>
-                    )}
-                  </div>
+                  ))}
                 </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Activity Feed */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Send className="h-4 w-4 text-emerald" />
+                アクティビティ
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-0">
+                {mockActivities.slice(0, 6).map((activity) => {
+
+                  const refNow = new Date("2025-02-07T18:00:00Z");
+                  const then = new Date(activity.createdAt);
+                  const diffMs = refNow.getTime() - then.getTime();
+                  const diffMin = Math.floor(diffMs / 60000);
+                  const diffHr = Math.floor(diffMin / 60);
+                  const diffDay = Math.floor(diffHr / 24);
+                  const timeStr = diffDay > 0 ? `${diffDay}日前` : diffHr > 0 ? `${diffHr}時間前` : `${diffMin}分前`;
+
+                  return (
+                    <div key={activity.id} className="flex items-start gap-2.5 py-2.5 border-b border-border/50 last:border-0">
+                      <div
+                        className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white"
+                        style={{ backgroundColor: activity.userColor }}
+                      >
+                        {activity.userInitial}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] font-medium">{activity.userName}</span>
+                          <span className="ml-auto text-[10px] text-muted-foreground">{timeStr}</span>
+                        </div>
+                        {activity.detail && (
+                          <p className="text-[10px] text-muted-foreground truncate">{activity.detail}</p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }
