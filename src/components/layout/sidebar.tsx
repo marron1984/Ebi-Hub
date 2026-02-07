@@ -9,6 +9,7 @@ import {
   Users,
   Spade,
   BookOpen,
+  Calculator,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./theme-toggle";
@@ -18,6 +19,7 @@ const navigation = [
   { name: "セッション記録", href: "/sessions/new", icon: Plus },
   { name: "ハンドレビュー", href: "/hands", icon: ClipboardList },
   { name: "レンジ表", href: "/ranges", icon: BookOpen },
+  { name: "ステーキング", href: "/staking", icon: Calculator },
   { name: "チーム", href: "/team", icon: Users },
 ];
 

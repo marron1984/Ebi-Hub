@@ -10,6 +10,7 @@ import {
   Tooltip,
 } from "recharts";
 import type { Session } from "@/types/poker";
+import { getCurrencyFlag } from "@/lib/currency";
 
 interface ProfitChartProps {
   sessions: Session[];
@@ -17,20 +18,22 @@ interface ProfitChartProps {
 
 export function ProfitChart({ sessions }: ProfitChartProps) {
   const sortedSessions = [...sessions].sort(
-    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    (a, b) => new Date(a.sessionDate).getTime() - new Date(b.sessionDate).getTime()
   );
 
   let cumulative = 0;
   const data = sortedSessions.map((session) => {
-    cumulative += session.profit;
+    cumulative += session.profitJpy;
     return {
-      date: new Date(session.date).toLocaleDateString("ja-JP", {
+      date: new Date(session.sessionDate).toLocaleDateString("ja-JP", {
         month: "short",
         day: "numeric",
       }),
-      profit: session.profit,
+      profitJpy: session.profitJpy,
       cumulative,
       location: session.location,
+      currency: session.currency,
+      flag: getCurrencyFlag(session.currency),
     };
   });
 
@@ -57,7 +60,11 @@ export function ProfitChart({ sessions }: ProfitChartProps) {
             fontSize={11}
             tickLine={false}
             axisLine={false}
-            tickFormatter={(value) => `$${value}`}
+            tickFormatter={(value) => {
+              const abs = Math.abs(value);
+              if (abs >= 10000) return `¥${(value / 10000).toFixed(0)}万`;
+              return `¥${value.toLocaleString()}`;
+            }}
           />
           <Tooltip
             contentStyle={{
@@ -68,7 +75,7 @@ export function ProfitChart({ sessions }: ProfitChartProps) {
               fontSize: "12px",
             }}
             labelStyle={{ color: "#94A3B8" }}
-            formatter={(value) => [`$${Number(value).toLocaleString()}`]}
+            formatter={(value) => [`¥${Number(value).toLocaleString()}`]}
           />
           <Area
             type="monotone"

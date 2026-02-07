@@ -8,6 +8,7 @@ import {
   Plus,
   Users,
   BookOpen,
+  Calculator,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -15,7 +16,7 @@ const navigation = [
   { name: "戦績", href: "/dashboard", icon: LayoutDashboard },
   { name: "記録", href: "/sessions/new", icon: Plus },
   { name: "HH", href: "/hands", icon: ClipboardList },
-  { name: "レンジ", href: "/ranges", icon: BookOpen },
+  { name: "分配", href: "/staking", icon: Calculator },
   { name: "チーム", href: "/team", icon: Users },
 ];
 

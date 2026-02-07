@@ -1,10 +1,17 @@
 "use client";
 
 import type { Session } from "@/types/poker";
-import { formatCurrency, formatDuration } from "@/lib/utils";
+import { formatDuration } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Clock, Globe, Building2 } from "lucide-react";
+import {
+  formatOriginal,
+  formatDualCurrency,
+  formatJpy,
+  getCurrencyFlag,
+  POKER_CURRENCIES,
+} from "@/lib/currency";
 
 interface SessionTableProps {
   sessions: Session[];
@@ -13,7 +20,7 @@ interface SessionTableProps {
 
 export function SessionTable({ sessions, privacy = false }: SessionTableProps) {
   const sortedSessions = [...sessions].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    (a, b) => new Date(b.sessionDate).getTime() - new Date(a.sessionDate).getTime()
   );
 
   return (
@@ -21,14 +28,17 @@ export function SessionTable({ sessions, privacy = false }: SessionTableProps) {
       {sortedSessions.map((session) => (
         <div
           key={session.id}
-          className="glass rounded-lg border p-4 transition-all hover:border-emerald/30"
+          className={cn(
+            "glass rounded-lg border p-4 transition-all hover:border-emerald/30",
+            session.status === "OPEN" && "border-gold/30"
+          )}
         >
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             {/* Left: Date & Location */}
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">
-                  {new Date(session.date).toLocaleDateString("ja-JP", {
+                  {new Date(session.sessionDate).toLocaleDateString("ja-JP", {
                     year: "numeric",
                     month: "long",
                     day: "numeric",
@@ -43,8 +53,13 @@ export function SessionTable({ sessions, privacy = false }: SessionTableProps) {
                   {session.venue === "live" ? "ライブ" : "オンライン"}
                 </Badge>
                 <Badge variant="outline">{session.gameType}</Badge>
-                {session.currency === "JPY" && (
-                  <Badge variant="outline" className="text-[10px]">¥</Badge>
+                <Badge variant="outline" className="text-[10px] gap-1">
+                  {getCurrencyFlag(session.currency)} {session.currency}
+                </Badge>
+                {session.status === "OPEN" && (
+                  <Badge variant="outline" className="text-[10px] border-gold/50 text-gold">
+                    プレイ中
+                  </Badge>
                 )}
               </div>
               <div className="flex items-center gap-3 text-xs text-muted-foreground">
@@ -57,30 +72,44 @@ export function SessionTable({ sessions, privacy = false }: SessionTableProps) {
                   {formatDuration(session.durationMinutes)}
                 </span>
                 <span className="font-number">{session.stakes}</span>
+                {session.currency !== "JPY" && (
+                  <span className="font-number text-[10px]">
+                    (1{POKER_CURRENCIES[session.currency].symbol}=¥{session.exchangeRate})
+                  </span>
+                )}
               </div>
             </div>
 
-            {/* Right: P&L */}
+            {/* Right: P&L - dual currency */}
             <div className="flex items-center gap-4">
               <div className="text-right">
                 <p className="text-xs text-muted-foreground">バイイン / キャッシュアウト</p>
                 <p className="font-number text-sm">
                   {privacy
                     ? "*** / ***"
-                    : `${formatCurrency(session.buyIn, session.currency).replace("+", "")} / ${formatCurrency(session.cashOut, session.currency).replace("+", "")}`}
+                    : `${formatOriginal(session.buyIn, session.currency).replace("+", "")} / ${formatOriginal(session.cashOut, session.currency).replace("+", "")}`}
                 </p>
               </div>
-              <div
-                className={cn(
-                  "min-w-[80px] rounded-lg px-3 py-2 text-right",
-                  session.profit >= 0
-                    ? "bg-emerald/10 text-emerald"
-                    : "bg-crimson/10 text-crimson"
+              <div className="text-right">
+                {/* Primary: Original currency profit */}
+                <div
+                  className={cn(
+                    "min-w-[100px] rounded-lg px-3 py-1.5",
+                    session.profit >= 0
+                      ? "profit-glow bg-emerald/10 text-emerald"
+                      : "loss-glow bg-crimson/10 text-crimson"
+                  )}
+                >
+                  <p className="font-number text-lg font-bold">
+                    {formatOriginal(session.profit, session.currency, privacy)}
+                  </p>
+                </div>
+                {/* Sub: JPY conversion */}
+                {session.currency !== "JPY" && !privacy && (
+                  <p className="mt-0.5 font-number text-[11px] text-muted-foreground">
+                    {formatJpy(session.profitJpy)}
+                  </p>
                 )}
-              >
-                <p className="font-number text-lg font-bold">
-                  {formatCurrency(session.profit, session.currency, privacy)}
-                </p>
               </div>
             </div>
           </div>

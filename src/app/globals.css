@@ -2,7 +2,7 @@
 
 @theme inline {
   --font-sans: "Noto Sans JP", "Geist Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Roboto Mono", "Geist Mono", ui-monospace, monospace;
+  --font-mono: "JetBrains Mono", "Roboto Mono", "Geist Mono", ui-monospace, monospace;
 
   /* Semantic color tokens */
   --color-background: var(--background);
@@ -139,10 +139,53 @@ body {
   background: var(--foreground);
 }
 
-/* Number font for stats */
+/* ========================================
+   Number font - tabular nums for aligned digits
+   Uses JetBrains Mono for precise number display
+   ======================================== */
 .font-number {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* ========================================
+   Visual Feedback - Profit/Loss Glow Effects
+   ======================================== */
+
+/* Emerald glow for positive results */
+.profit-glow {
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.15),
+              0 0 4px rgba(16, 185, 129, 0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+.profit-glow:hover {
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.25),
+              0 0 8px rgba(16, 185, 129, 0.15);
+}
+
+/* Rose-red transparency for negative results */
+.loss-glow {
+  box-shadow: 0 0 12px rgba(220, 38, 38, 0.1),
+              0 0 4px rgba(220, 38, 38, 0.08);
+  transition: box-shadow 0.3s ease;
+}
+
+.loss-glow:hover {
+  box-shadow: 0 0 20px rgba(220, 38, 38, 0.18),
+              0 0 8px rgba(220, 38, 38, 0.12);
+}
+
+/* Large profit card glow (dashboard stats) */
+.dark .profit-glow-lg {
+  box-shadow: 0 0 30px rgba(16, 185, 129, 0.12),
+              0 4px 20px rgba(16, 185, 129, 0.08);
+}
+
+.dark .loss-glow-lg {
+  box-shadow: 0 0 30px rgba(220, 38, 38, 0.08),
+              0 4px 20px rgba(220, 38, 38, 0.06);
 }
 
 /* Privacy blur */
@@ -156,7 +199,9 @@ body {
   filter: blur(4px);
 }
 
-/* Markdown content styling */
+/* ========================================
+   Markdown content styling
+   ======================================== */
 .markdown-content h1 { font-size: 1.5em; font-weight: 700; margin: 1em 0 0.5em; }
 .markdown-content h2 { font-size: 1.25em; font-weight: 600; margin: 0.8em 0 0.4em; }
 .markdown-content h3 { font-size: 1.1em; font-weight: 600; margin: 0.6em 0 0.3em; }
@@ -179,3 +224,71 @@ body {
 }
 .markdown-content strong { font-weight: 700; }
 .markdown-content em { font-style: italic; }
+.markdown-content img {
+  border-radius: 8px;
+  max-width: 100%;
+  margin: 0.5em 0;
+  border: 1px solid var(--border);
+}
+
+/* LaTeX math styling */
+.markdown-content .math-inline {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--muted);
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+  color: var(--primary);
+  white-space: nowrap;
+}
+
+.markdown-content .math-block {
+  font-family: var(--font-mono);
+  font-size: 0.95em;
+  background: var(--muted);
+  padding: 0.8em 1em;
+  border-radius: 6px;
+  margin: 0.5em 0;
+  color: var(--primary);
+  text-align: center;
+  overflow-x: auto;
+}
+
+/* ========================================
+   Image attachment styling
+   ======================================== */
+.image-attachment {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.image-attachment img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.image-attachment .overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  transition: opacity 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-attachment:hover .overlay {
+  opacity: 1;
+}
+
+/* ========================================
+   Currency flag styling
+   ======================================== */
+.currency-flag {
+  font-size: 1.2em;
+  line-height: 1;
+}

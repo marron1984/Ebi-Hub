@@ -1,3 +1,5 @@
+import type { PokerCurrency, SessionStatus } from "@/lib/currency";
+
 // ===== Core Enums =====
 
 export type GameType = "NLH" | "PLO" | "PLO5" | "Mixed";
@@ -43,14 +45,8 @@ export type Rank =
   | "3"
   | "2";
 
-// ===== Currency =====
-
-export type Currency = "USD" | "JPY";
-
-export interface CurrencyAmount {
-  amount: number;
-  currency: Currency;
-}
+// Re-export for backward compat
+export type Currency = PokerCurrency;
 
 // ===== Card =====
 
@@ -130,6 +126,9 @@ export const TAG_LABELS_JA: Record<HandTag, string> = {
 
 export interface Session {
   id: string;
+  /** Session date (YYYY-MM-DD) */
+  sessionDate: string;
+  /** @deprecated Use sessionDate */
   date: string;
   startTime: string;
   endTime: string;
@@ -137,10 +136,20 @@ export interface Session {
   location: string;
   gameType: GameType;
   stakes: string;
+  /** Original currency amounts */
   buyIn: number;
   cashOut: number;
   profit: number;
-  currency: Currency;
+  /** Currency of the original amounts */
+  currency: PokerCurrency;
+  /** Exchange rate to JPY at time of session */
+  exchangeRate: number;
+  /** JPY-converted amounts */
+  buyInJpy: number;
+  cashOutJpy: number;
+  profitJpy: number;
+  /** OPEN = still playing / unsettled, SETTLED = converted to JPY */
+  status: SessionStatus;
   durationMinutes: number;
   notes: string;
   playerId: string;
@@ -156,6 +165,8 @@ export interface StreetAction {
   potSize: number;
   board: Card[];
   thoughtProcess: string;
+  /** Optional image URLs (solver screenshots, range charts) */
+  images?: string[];
 }
 
 export interface PlayerAction {
@@ -187,7 +198,7 @@ export interface HandHistory {
   streets: StreetAction[];
   pot: number;
   result: number;
-  currency: Currency;
+  currency: PokerCurrency;
   tags: HandTag[];
   notes: string;
   comments: HandComment[];
@@ -231,18 +242,22 @@ export interface RangeChart {
 export interface PlayerStats {
   totalSessions: number;
   totalHands: number;
-  totalProfit: number;
+  /** Total profit in JPY (base currency) */
+  totalProfitJpy: number;
+  /** Total profit in USD (for reference) */
+  totalProfitUsd: number;
   totalHours: number;
-  hourlyRate: number;
+  hourlyRateJpy: number;
   winRate: number;
   bbPer100: number;
-  bestSession: number;
-  worstSession: number;
+  bestSessionJpy: number;
+  worstSessionJpy: number;
   currentStreak: number;
-  currency: Currency;
   profitByGameType: Record<GameType, number>;
   profitByVenue: Record<Venue, number>;
-  monthlyProfit: { month: string; profit: number }[];
+  /** Profit breakdown by currency (original amounts) */
+  profitByCurrency: Partial<Record<PokerCurrency, number>>;
+  monthlyProfitJpy: { month: string; profitJpy: number }[];
 }
 
 // ===== Dashboard Filters =====

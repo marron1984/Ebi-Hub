@@ -6,6 +6,9 @@ import type {
   HandComment,
   RangeChart,
 } from "@/types/poker";
+import type { PokerCurrency } from "@/lib/currency";
+
+// ===== Players =====
 
 export const mockPlayers: Player[] = [
   { id: "p1", name: "武 (Takeshi)", role: "leader", joinedAt: "2024-01-15" },
@@ -14,85 +17,129 @@ export const mockPlayers: Player[] = [
   { id: "p4", name: "陽斗 (Haruto)", role: "member", joinedAt: "2024-04-20" },
 ];
 
+// ===== Sessions (multi-currency) =====
+
 export const mockSessions: Session[] = [
   {
-    id: "s1", date: "2025-02-01", startTime: "20:00", endTime: "02:30",
+    id: "s1", sessionDate: "2025-02-01", date: "2025-02-01", startTime: "20:00", endTime: "02:30",
     venue: "live", location: "東京ポーカークラブ", gameType: "NLH", stakes: "1/2",
-    buyIn: 300, cashOut: 785, profit: 485, currency: "USD", durationMinutes: 390,
+    buyIn: 300, cashOut: 785, profit: 485, currency: "USD",
+    exchangeRate: 150, buyInJpy: 45000, cashOutJpy: 117750, profitJpy: 72750,
+    status: "SETTLED", durationMinutes: 390,
     notes: "テーブルが非常にルースだった。バリューベットを多めに。",
     playerId: "p1", createdAt: "2025-02-01T20:00:00Z", updatedAt: "2025-02-02T02:30:00Z",
   },
   {
-    id: "s2", date: "2025-01-28", startTime: "19:00", endTime: "23:45",
+    id: "s2", sessionDate: "2025-01-28", date: "2025-01-28", startTime: "19:00", endTime: "23:45",
     venue: "online", location: "PokerStars", gameType: "NLH", stakes: "0.5/1",
-    buyIn: 200, cashOut: 142, profit: -58, currency: "USD", durationMinutes: 285,
+    buyIn: 200, cashOut: 142, profit: -58, currency: "USD",
+    exchangeRate: 150, buyInJpy: 30000, cashOutJpy: 21300, profitJpy: -8700,
+    status: "SETTLED", durationMinutes: 285,
     notes: "ティルト気味だった。ブレイクをもっと取るべきだった。",
     playerId: "p1", createdAt: "2025-01-28T19:00:00Z", updatedAt: "2025-01-29T00:00:00Z",
   },
   {
-    id: "s3", date: "2025-01-25", startTime: "21:00", endTime: "03:00",
+    id: "s3", sessionDate: "2025-01-25", date: "2025-01-25", startTime: "21:00", endTime: "03:00",
     venue: "live", location: "横浜カジノバー", gameType: "PLO", stakes: "1/2",
-    buyIn: 500, cashOut: 1230, profit: 730, currency: "USD", durationMinutes: 360,
+    buyIn: 500, cashOut: 1230, profit: 730, currency: "USD",
+    exchangeRate: 150, buyInJpy: 75000, cashOutJpy: 184500, profitJpy: 109500,
+    status: "SETTLED", durationMinutes: 360,
     notes: "PLOでナッツを引き続けた。非常に良いセッション。",
     playerId: "p1", createdAt: "2025-01-25T21:00:00Z", updatedAt: "2025-01-26T03:00:00Z",
   },
   {
-    id: "s4", date: "2025-01-22", startTime: "22:00", endTime: "01:30",
+    id: "s4", sessionDate: "2025-01-22", date: "2025-01-22", startTime: "22:00", endTime: "01:30",
     venue: "online", location: "GGPoker", gameType: "NLH", stakes: "0.25/0.5",
-    buyIn: 100, cashOut: 88, profit: -12, currency: "USD", durationMinutes: 210,
+    buyIn: 100, cashOut: 88, profit: -12, currency: "USD",
+    exchangeRate: 150, buyInJpy: 15000, cashOutJpy: 13200, profitJpy: -1800,
+    status: "SETTLED", durationMinutes: 210,
     notes: "ショートセッション。特に大きなハンドなし。",
     playerId: "p1", createdAt: "2025-01-22T22:00:00Z", updatedAt: "2025-01-23T01:30:00Z",
   },
   {
-    id: "s5", date: "2025-01-18", startTime: "20:00", endTime: "04:00",
+    id: "s5", sessionDate: "2025-01-18", date: "2025-01-18", startTime: "20:00", endTime: "04:00",
     venue: "live", location: "東京ポーカークラブ", gameType: "NLH", stakes: "2/5",
-    buyIn: 500, cashOut: 1450, profit: 950, currency: "USD", durationMinutes: 480,
+    buyIn: 500, cashOut: 1450, profit: 950, currency: "USD",
+    exchangeRate: 150, buyInJpy: 75000, cashOutJpy: 217500, profitJpy: 142500,
+    status: "SETTLED", durationMinutes: 480,
     notes: "キープレイヤーのリークを特定。3BETレンジを広げて成功。",
     playerId: "p1", createdAt: "2025-01-18T20:00:00Z", updatedAt: "2025-01-19T04:00:00Z",
   },
   {
-    id: "s6", date: "2025-01-15", startTime: "19:30", endTime: "00:30",
+    id: "s6", sessionDate: "2025-01-15", date: "2025-01-15", startTime: "19:30", endTime: "00:30",
     venue: "live", location: "大阪カードルーム", gameType: "NLH", stakes: "1/2",
-    buyIn: 300, cashOut: 195, profit: -105, currency: "USD", durationMinutes: 300,
+    buyIn: 300, cashOut: 195, profit: -105, currency: "USD",
+    exchangeRate: 150, buyInJpy: 45000, cashOutJpy: 29250, profitJpy: -15750,
+    status: "SETTLED", durationMinutes: 300,
     notes: "クーラーが多かった。セットオーバーセットで大きくロスト。",
     playerId: "p1", createdAt: "2025-01-15T19:30:00Z", updatedAt: "2025-01-16T00:30:00Z",
   },
   {
-    id: "s7", date: "2025-01-12", startTime: "21:00", endTime: "02:00",
+    id: "s7", sessionDate: "2025-01-12", date: "2025-01-12", startTime: "21:00", endTime: "02:00",
     venue: "online", location: "PokerStars", gameType: "NLH", stakes: "0.5/1",
-    buyIn: 200, cashOut: 365, profit: 165, currency: "USD", durationMinutes: 300,
+    buyIn: 200, cashOut: 365, profit: 165, currency: "USD",
+    exchangeRate: 150, buyInJpy: 30000, cashOutJpy: 54750, profitJpy: 24750,
+    status: "SETTLED", durationMinutes: 300,
     notes: "堅実にプレイ。ブラフキャッチが上手くいった。",
     playerId: "p1", createdAt: "2025-01-12T21:00:00Z", updatedAt: "2025-01-13T02:00:00Z",
   },
   {
-    id: "s8", date: "2025-01-08", startTime: "20:00", endTime: "01:00",
+    id: "s8", sessionDate: "2025-01-08", date: "2025-01-08", startTime: "20:00", endTime: "01:00",
     venue: "live", location: "東京ポーカークラブ", gameType: "NLH", stakes: "1/2",
-    buyIn: 300, cashOut: 520, profit: 220, currency: "USD", durationMinutes: 300,
+    buyIn: 300, cashOut: 520, profit: 220, currency: "USD",
+    exchangeRate: 150, buyInJpy: 45000, cashOutJpy: 78000, profitJpy: 33000,
+    status: "SETTLED", durationMinutes: 300,
     notes: "ポジションを意識したプレイが奏功。",
     playerId: "p1", createdAt: "2025-01-08T20:00:00Z", updatedAt: "2025-01-09T01:00:00Z",
   },
   {
-    id: "s9", date: "2025-01-05", startTime: "18:00", endTime: "22:30",
+    id: "s9", sessionDate: "2025-01-05", date: "2025-01-05", startTime: "18:00", endTime: "22:30",
     venue: "online", location: "GGPoker", gameType: "PLO", stakes: "0.5/1",
-    buyIn: 200, cashOut: 310, profit: 110, currency: "USD", durationMinutes: 270,
+    buyIn: 200, cashOut: 310, profit: 110, currency: "USD",
+    exchangeRate: 150, buyInJpy: 30000, cashOutJpy: 46500, profitJpy: 16500,
+    status: "SETTLED", durationMinutes: 270,
     notes: "PLOの練習セッション。ハンドセレクションを改善。",
     playerId: "p1", createdAt: "2025-01-05T18:00:00Z", updatedAt: "2025-01-05T22:30:00Z",
   },
   {
-    id: "s10", date: "2025-01-02", startTime: "21:00", endTime: "03:30",
+    id: "s10", sessionDate: "2025-01-02", date: "2025-01-02", startTime: "21:00", endTime: "03:30",
     venue: "live", location: "東京ポーカークラブ", gameType: "NLH", stakes: "2/5",
-    buyIn: 500, cashOut: 320, profit: -180, currency: "USD", durationMinutes: 390,
+    buyIn: 500, cashOut: 320, profit: -180, currency: "USD",
+    exchangeRate: 150, buyInJpy: 75000, cashOutJpy: 48000, profitJpy: -27000,
+    status: "SETTLED", durationMinutes: 390,
     notes: "新年で酔ったプレイヤーが多かったが、自分もコンディション悪かった。",
     playerId: "p1", createdAt: "2025-01-02T21:00:00Z", updatedAt: "2025-01-03T03:30:00Z",
   },
   {
-    id: "s11", date: "2024-12-28", startTime: "20:00", endTime: "02:00",
+    id: "s11", sessionDate: "2024-12-28", date: "2024-12-28", startTime: "20:00", endTime: "02:00",
     venue: "live", location: "秋葉原ポーカーバー", gameType: "NLH", stakes: "100/200",
-    buyIn: 30000, cashOut: 52000, profit: 22000, currency: "JPY", durationMinutes: 360,
+    buyIn: 30000, cashOut: 52000, profit: 22000, currency: "JPY",
+    exchangeRate: 1, buyInJpy: 30000, cashOutJpy: 52000, profitJpy: 22000,
+    status: "SETTLED", durationMinutes: 360,
     notes: "円建てライブ。テーブルのレベルが低く、安定して勝てた。",
     playerId: "p1", createdAt: "2024-12-28T20:00:00Z", updatedAt: "2024-12-29T02:00:00Z",
   },
+  {
+    id: "s12", sessionDate: "2025-02-05", date: "2025-02-05", startTime: "20:00", endTime: "01:00",
+    venue: "live", location: "マニラ遠征", gameType: "NLH", stakes: "100/200",
+    buyIn: 50000, cashOut: 78000, profit: 28000, currency: "PHP",
+    exchangeRate: 2.65, buyInJpy: 132500, cashOutJpy: 206700, profitJpy: 74200,
+    status: "SETTLED", durationMinutes: 300,
+    notes: "マニラ遠征。ルースなテーブルで安定して利益を出せた。フィリピンのライブポーカーシーンは活気がある。",
+    playerId: "p1", createdAt: "2025-02-05T20:00:00Z", updatedAt: "2025-02-06T01:00:00Z",
+  },
+  {
+    id: "s13", sessionDate: "2025-02-08", date: "2025-02-08", startTime: "19:00", endTime: "01:00",
+    venue: "live", location: "ソウルポーカークラブ", gameType: "NLH", stakes: "5K/10K",
+    buyIn: 500000, cashOut: 720000, profit: 220000, currency: "KRW",
+    exchangeRate: 0.11, buyInJpy: 55000, cashOutJpy: 79200, profitJpy: 24200,
+    status: "SETTLED", durationMinutes: 360,
+    notes: "ソウル遠征。韓国のレギュラーは堅いが、ポジションプレイで勝ち越し。",
+    playerId: "p1", createdAt: "2025-02-08T19:00:00Z", updatedAt: "2025-02-09T01:00:00Z",
+  },
 ];
+
+// ===== Hand Comments =====
 
 const mockComments: HandComment[] = [
   {
@@ -121,6 +168,8 @@ const mockComments: HandComment[] = [
     createdAt: "2025-01-29T09:00:00Z",
   },
 ];
+
+// ===== Hand Histories =====
 
 export const mockHands: HandHistory[] = [
   {
@@ -292,74 +341,98 @@ export const mockHands: HandHistory[] = [
   },
 ];
 
+// ===== Player Stats (JPY base currency) =====
+
 export const mockStats: PlayerStats = {
   totalSessions: mockSessions.length,
   totalHands: 2847,
-  totalProfit: mockSessions.filter((s) => s.currency === "USD").reduce((sum, s) => sum + s.profit, 0),
+  totalProfitJpy: mockSessions.reduce((sum, s) => sum + s.profitJpy, 0),
+  totalProfitUsd: Math.round(mockSessions.reduce((sum, s) => sum + s.profitJpy, 0) / 150),
   totalHours: Math.round(mockSessions.reduce((sum, s) => sum + s.durationMinutes, 0) / 60),
-  hourlyRate: Math.round(
-    (mockSessions.filter((s) => s.currency === "USD").reduce((sum, s) => sum + s.profit, 0) /
+  hourlyRateJpy: Math.round(
+    (mockSessions.reduce((sum, s) => sum + s.profitJpy, 0) /
       mockSessions.reduce((sum, s) => sum + s.durationMinutes, 0)) * 60
   ),
   winRate: Math.round(
     (mockSessions.filter((s) => s.profit > 0).length / mockSessions.length) * 100
   ),
   bbPer100: 8.3,
-  bestSession: Math.max(...mockSessions.filter((s) => s.currency === "USD").map((s) => s.profit)),
-  worstSession: Math.min(...mockSessions.filter((s) => s.currency === "USD").map((s) => s.profit)),
+  bestSessionJpy: Math.max(...mockSessions.map((s) => s.profitJpy)),
+  worstSessionJpy: Math.min(...mockSessions.map((s) => s.profitJpy)),
   currentStreak: 3,
-  currency: "USD",
   profitByGameType: {
-    NLH: mockSessions.filter((s) => s.gameType === "NLH" && s.currency === "USD").reduce((sum, s) => sum + s.profit, 0),
-    PLO: mockSessions.filter((s) => s.gameType === "PLO" && s.currency === "USD").reduce((sum, s) => sum + s.profit, 0),
+    NLH: mockSessions.filter((s) => s.gameType === "NLH").reduce((sum, s) => sum + s.profitJpy, 0),
+    PLO: mockSessions.filter((s) => s.gameType === "PLO").reduce((sum, s) => sum + s.profitJpy, 0),
     PLO5: 0,
     Mixed: 0,
   },
   profitByVenue: {
-    live: mockSessions.filter((s) => s.venue === "live" && s.currency === "USD").reduce((sum, s) => sum + s.profit, 0),
-    online: mockSessions.filter((s) => s.venue === "online" && s.currency === "USD").reduce((sum, s) => sum + s.profit, 0),
+    live: mockSessions.filter((s) => s.venue === "live").reduce((sum, s) => sum + s.profitJpy, 0),
+    online: mockSessions.filter((s) => s.venue === "online").reduce((sum, s) => sum + s.profitJpy, 0),
   },
-  monthlyProfit: [
-    { month: "2024-08", profit: 320 },
-    { month: "2024-09", profit: -150 },
-    { month: "2024-10", profit: 680 },
-    { month: "2024-11", profit: 450 },
-    { month: "2024-12", profit: -200 },
-    { month: "2025-01", profit: 1820 },
-    { month: "2025-02", profit: 485 },
+  profitByCurrency: {
+    USD: mockSessions.filter((s) => s.currency === "USD").reduce((sum, s) => sum + s.profit, 0),
+    JPY: mockSessions.filter((s) => s.currency === "JPY").reduce((sum, s) => sum + s.profit, 0),
+    PHP: mockSessions.filter((s) => s.currency === "PHP").reduce((sum, s) => sum + s.profit, 0),
+    KRW: mockSessions.filter((s) => s.currency === "KRW").reduce((sum, s) => sum + s.profit, 0),
+  },
+  monthlyProfitJpy: [
+    { month: "2024-08", profitJpy: 48000 },
+    { month: "2024-09", profitJpy: -22500 },
+    { month: "2024-10", profitJpy: 102000 },
+    { month: "2024-11", profitJpy: 67500 },
+    { month: "2024-12", profitJpy: mockSessions.filter((s) => s.sessionDate.startsWith("2024-12")).reduce((sum, s) => sum + s.profitJpy, 0) },
+    { month: "2025-01", profitJpy: mockSessions.filter((s) => s.sessionDate.startsWith("2025-01")).reduce((sum, s) => sum + s.profitJpy, 0) },
+    { month: "2025-02", profitJpy: mockSessions.filter((s) => s.sessionDate.startsWith("2025-02")).reduce((sum, s) => sum + s.profitJpy, 0) },
   ],
 };
+
+// ===== Team Member Stats =====
 
 export const teamMemberStats: Record<string, PlayerStats> = {
   p1: mockStats,
   p2: {
-    ...mockStats, totalProfit: 1250, hourlyRate: 18, winRate: 55, bbPer100: 5.2,
-    monthlyProfit: [
-      { month: "2024-08", profit: 150 }, { month: "2024-09", profit: 200 },
-      { month: "2024-10", profit: -100 }, { month: "2024-11", profit: 300 },
-      { month: "2024-12", profit: 180 }, { month: "2025-01", profit: 420 },
-      { month: "2025-02", profit: 100 },
+    ...mockStats,
+    totalProfitJpy: 187500, totalProfitUsd: 1250, hourlyRateJpy: 2700,
+    winRate: 55, bbPer100: 5.2,
+    bestSessionJpy: 60000, worstSessionJpy: -22500,
+    profitByCurrency: { USD: 1250 },
+    monthlyProfitJpy: [
+      { month: "2024-08", profitJpy: 22500 }, { month: "2024-09", profitJpy: 30000 },
+      { month: "2024-10", profitJpy: -15000 }, { month: "2024-11", profitJpy: 45000 },
+      { month: "2024-12", profitJpy: 27000 }, { month: "2025-01", profitJpy: 63000 },
+      { month: "2025-02", profitJpy: 15000 },
     ],
   },
   p3: {
-    ...mockStats, totalProfit: -320, hourlyRate: -5, winRate: 40, bbPer100: -2.1,
-    monthlyProfit: [
-      { month: "2024-08", profit: 80 }, { month: "2024-09", profit: -250 },
-      { month: "2024-10", profit: 100 }, { month: "2024-11", profit: -180 },
-      { month: "2024-12", profit: -70 }, { month: "2025-01", profit: 50 },
-      { month: "2025-02", profit: -50 },
+    ...mockStats,
+    totalProfitJpy: -48000, totalProfitUsd: -320, hourlyRateJpy: -750,
+    winRate: 40, bbPer100: -2.1,
+    bestSessionJpy: 15000, worstSessionJpy: -37500,
+    profitByCurrency: { USD: -320 },
+    monthlyProfitJpy: [
+      { month: "2024-08", profitJpy: 12000 }, { month: "2024-09", profitJpy: -37500 },
+      { month: "2024-10", profitJpy: 15000 }, { month: "2024-11", profitJpy: -27000 },
+      { month: "2024-12", profitJpy: -10500 }, { month: "2025-01", profitJpy: 7500 },
+      { month: "2025-02", profitJpy: -7500 },
     ],
   },
   p4: {
-    ...mockStats, totalProfit: 890, hourlyRate: 12, winRate: 52, bbPer100: 4.5,
-    monthlyProfit: [
-      { month: "2024-08", profit: 200 }, { month: "2024-09", profit: 50 },
-      { month: "2024-10", profit: 150 }, { month: "2024-11", profit: 120 },
-      { month: "2024-12", profit: 80 }, { month: "2025-01", profit: 190 },
-      { month: "2025-02", profit: 100 },
+    ...mockStats,
+    totalProfitJpy: 133500, totalProfitUsd: 890, hourlyRateJpy: 1800,
+    winRate: 52, bbPer100: 4.5,
+    bestSessionJpy: 30000, worstSessionJpy: -15000,
+    profitByCurrency: { USD: 890 },
+    monthlyProfitJpy: [
+      { month: "2024-08", profitJpy: 30000 }, { month: "2024-09", profitJpy: 7500 },
+      { month: "2024-10", profitJpy: 22500 }, { month: "2024-11", profitJpy: 18000 },
+      { month: "2024-12", profitJpy: 12000 }, { month: "2025-01", profitJpy: 28500 },
+      { month: "2025-02", profitJpy: 15000 },
     ],
   },
 };
+
+// ===== Range Library =====
 
 const RANKS = ["A","K","Q","J","T","9","8","7","6","5","4","3","2"];
 

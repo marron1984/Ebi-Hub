@@ -10,7 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatsCard } from "@/components/poker/stats-card";
 import { PrivacyToggle } from "@/components/poker/privacy-toggle";
 import { mockPlayers, teamMemberStats } from "@/lib/mock-data";
-import { cn, formatCurrency } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { formatJpy } from "@/lib/currency";
 import {
   Users, DollarSign, Clock, Target, TrendingUp, Crown, BarChart3,
 } from "lucide-react";
@@ -29,12 +30,12 @@ export default function TeamPage() {
 
   const activeMembers = mockPlayers.filter((p) => selectedMembers.includes(p.id));
 
-  const aggregatedProfit = activeMembers.reduce((sum, p) => sum + (teamMemberStats[p.id]?.totalProfit ?? 0), 0);
+  const aggregatedProfitJpy = activeMembers.reduce((sum, p) => sum + (teamMemberStats[p.id]?.totalProfitJpy ?? 0), 0);
   const aggregatedHours = activeMembers.reduce((sum, p) => sum + (teamMemberStats[p.id]?.totalHours ?? 0), 0);
   const avgWinRate = activeMembers.length > 0
     ? Math.round(activeMembers.reduce((sum, p) => sum + (teamMemberStats[p.id]?.winRate ?? 0), 0) / activeMembers.length)
     : 0;
-  const avgHourly = aggregatedHours > 0 ? Math.round(aggregatedProfit / aggregatedHours) : 0;
+  const avgHourlyJpy = aggregatedHours > 0 ? Math.round(aggregatedProfitJpy / aggregatedHours) : 0;
 
   const months = ["2024-08","2024-09","2024-10","2024-11","2024-12","2025-01","2025-02"];
   const monthlyComparisonData = months.map((month) => {
@@ -43,20 +44,26 @@ export default function TeamPage() {
     };
     activeMembers.forEach((p) => {
       const stats = teamMemberStats[p.id];
-      const monthData = stats?.monthlyProfit.find((m) => m.month === month);
-      entry[p.name] = monthData?.profit ?? 0;
+      const monthData = stats?.monthlyProfitJpy.find((m) => m.month === month);
+      entry[p.name] = monthData?.profitJpy ?? 0;
     });
     if (showAggregated) {
       entry["チーム合計"] = activeMembers.reduce((sum, p) => {
         const stats = teamMemberStats[p.id];
-        const monthData = stats?.monthlyProfit.find((m) => m.month === month);
-        return sum + (monthData?.profit ?? 0);
+        const monthData = stats?.monthlyProfitJpy.find((m) => m.month === month);
+        return sum + (monthData?.profitJpy ?? 0);
       }, 0);
     }
     return entry;
   });
 
   const colors = ["#10B981", "#F59E0B", "#EF4444", "#8B5CF6"];
+
+  const fmtAxis = (v: number) => {
+    const abs = Math.abs(v);
+    if (abs >= 10000) return `¥${(v / 10000).toFixed(0)}万`;
+    return `¥${v.toLocaleString()}`;
+  };
 
   return (
     <div className="space-y-6">
@@ -87,14 +94,14 @@ export default function TeamPage() {
 
       {showAggregated && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatsCard title="チーム収支" value={formatCurrency(aggregatedProfit, "USD", privacy)}
+          <StatsCard title="チーム収支(JPY)" value={formatJpy(aggregatedProfitJpy, privacy)}
             subtitle={`${activeMembers.length} 人のメンバー`} icon={DollarSign}
-            trend={aggregatedProfit >= 0 ? "up" : "down"}
-            accentColor={aggregatedProfit >= 0 ? "emerald" : "crimson"} />
-          <StatsCard title="平均時給"
-            value={privacy ? "***/h" : `${avgHourly >= 0 ? "+" : ""}$${Math.abs(avgHourly)}/h`}
+            trend={aggregatedProfitJpy >= 0 ? "up" : "down"}
+            accentColor={aggregatedProfitJpy >= 0 ? "emerald" : "crimson"} />
+          <StatsCard title="平均時給(JPY)"
+            value={privacy ? "***/h" : `${formatJpy(avgHourlyJpy)}/h`}
             subtitle={`合計 ${aggregatedHours}時間`} icon={Clock}
-            trend={avgHourly >= 0 ? "up" : "down"} accentColor="gold" />
+            trend={avgHourlyJpy >= 0 ? "up" : "down"} accentColor="gold" />
           <StatsCard title="平均勝率" value={`${avgWinRate}%`} subtitle="チーム平均"
             icon={Target} trend={avgWinRate >= 50 ? "up" : "down"} accentColor="emerald" />
           <StatsCard title="メンバー" value={`${activeMembers.length}`}
@@ -110,7 +117,7 @@ export default function TeamPage() {
 
         <TabsContent value="comparison">
           <Card>
-            <CardHeader><CardTitle className="text-base">月別収支比較</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">月別収支比較 (JPY)</CardTitle></CardHeader>
             <CardContent>
               <div className={privacy ? "privacy-blur" : ""}>
                 <div className="h-[350px]">
@@ -118,9 +125,9 @@ export default function TeamPage() {
                     <BarChart data={monthlyComparisonData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.1)" />
                       <XAxis dataKey="month" stroke="rgba(148,163,184,0.5)" fontSize={11} />
-                      <YAxis stroke="rgba(148,163,184,0.5)" fontSize={11} tickFormatter={(v) => `$${v}`} />
+                      <YAxis stroke="rgba(148,163,184,0.5)" fontSize={11} tickFormatter={fmtAxis} />
                       <Tooltip contentStyle={{ backgroundColor: "rgba(30,41,59,0.95)", border: "1px solid rgba(148,163,184,0.2)", borderRadius: "8px", color: "#F8FAFC", fontSize: "12px" }}
-                        formatter={(value) => [`$${value}`]} />
+                        formatter={(value) => [`¥${Number(value).toLocaleString()}`]} />
                       <Legend />
                       {activeMembers.map((p, i) => (
                         <Bar key={p.id} dataKey={p.name} fill={colors[i]} radius={[4, 4, 0, 0]} opacity={0.8} />
@@ -135,7 +142,7 @@ export default function TeamPage() {
 
         <TabsContent value="trend">
           <Card>
-            <CardHeader><CardTitle className="text-base">累積収支推移</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">累積収支推移 (JPY)</CardTitle></CardHeader>
             <CardContent>
               <div className={privacy ? "privacy-blur" : ""}>
                 <div className="h-[350px]">
@@ -143,9 +150,9 @@ export default function TeamPage() {
                     <LineChart data={monthlyComparisonData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.1)" />
                       <XAxis dataKey="month" stroke="rgba(148,163,184,0.5)" fontSize={11} />
-                      <YAxis stroke="rgba(148,163,184,0.5)" fontSize={11} tickFormatter={(v) => `$${v}`} />
+                      <YAxis stroke="rgba(148,163,184,0.5)" fontSize={11} tickFormatter={fmtAxis} />
                       <Tooltip contentStyle={{ backgroundColor: "rgba(30,41,59,0.95)", border: "1px solid rgba(148,163,184,0.2)", borderRadius: "8px", color: "#F8FAFC", fontSize: "12px" }}
-                        formatter={(value) => [`$${value}`]} />
+                        formatter={(value) => [`¥${Number(value).toLocaleString()}`]} />
                       <Legend />
                       {activeMembers.map((p, i) => (
                         <Line key={p.id} type="monotone" dataKey={p.name} stroke={colors[i]} strokeWidth={2} dot={{ r: 4 }} />
@@ -194,15 +201,15 @@ export default function TeamPage() {
                   </div>
                   <div className="flex gap-6 text-sm">
                     <div className="text-center">
-                      <p className="text-xs text-muted-foreground">収支</p>
-                      <p className={cn("font-number font-bold", stats.totalProfit >= 0 ? "text-emerald" : "text-crimson")}>
-                        {formatCurrency(stats.totalProfit, "USD", privacy)}
+                      <p className="text-xs text-muted-foreground">収支(JPY)</p>
+                      <p className={cn("font-number font-bold", stats.totalProfitJpy >= 0 ? "text-emerald" : "text-crimson")}>
+                        {formatJpy(stats.totalProfitJpy, privacy)}
                       </p>
                     </div>
                     <div className="text-center">
                       <p className="text-xs text-muted-foreground">時給</p>
                       <p className="font-number font-medium">
-                        {privacy ? "***" : `$${stats.hourlyRate}/h`}
+                        {privacy ? "***" : `¥${Math.abs(stats.hourlyRateJpy).toLocaleString()}/h`}
                       </p>
                     </div>
                     <div className="text-center">
