@@ -188,7 +188,7 @@ export function ActiveMembersPanel() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-medium truncate">
+                      <span className="text-xs font-medium truncate member-name-neon">
                         {ci.playerName}
                       </span>
                       <span className="font-number text-[10px] text-muted-foreground">

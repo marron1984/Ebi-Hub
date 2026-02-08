@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useEffect, useCallback, useOptimistic, useTransition, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ import {
 } from "@/lib/poker-spots";
 import type { OpponentNote, OpponentTag } from "@/lib/poker-spots";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/components/ui/toast-pakkiri";
 import {
   Search, MapPin, Star, Eye, ChevronRight,
   Clock, TrendingUp, TrendingDown, Minus,
@@ -92,6 +93,8 @@ const ALL_TAGS: OpponentTag[] = [
 
 function IntelligenceContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [spotFilter, setSpotFilter] = useState("all");
   const [opponents, setOpponents] = useState<OpponentNote[]>([]);
@@ -99,6 +102,13 @@ function IntelligenceContent() {
   const [showForm, setShowForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  // ── Optimistic state ──
+  const [optimisticOpponents, addOptimistic] = useOptimistic(
+    opponents,
+    (state: OpponentNote[], newOpp: OpponentNote) => [newOpp, ...state]
+  );
 
   // ── Fetch from API ──
   const fetchOpponents = useCallback(async () => {
@@ -117,11 +127,12 @@ function IntelligenceContent() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [selectedOpponent]);
 
   useEffect(() => {
     fetchOpponents();
-  }, [fetchOpponents]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Open form when navigated with ?register=true
   useEffect(() => {
@@ -141,7 +152,6 @@ function IntelligenceContent() {
   const [formBetSizing, setFormBetSizing] = useState("");
   const [formPhoto, setFormPhoto] = useState<string | undefined>();
   const [formSaving, setFormSaving] = useState(false);
-  const [formSaved, setFormSaved] = useState(false);
 
   const toggleFormTag = (tag: OpponentTag) => {
     setFormTags((prev) => prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]);
@@ -162,21 +172,48 @@ function IntelligenceContent() {
   const handleFormSave = async () => {
     if (!formName.trim() || formSaving) return;
 
+    const tempId = `temp-${Date.now()}`;
+    const optimisticEntry: OpponentNote = {
+      id: tempId,
+      opponentName: formName.trim(),
+      spotId: formSpot || "roots",
+      tags: formTags,
+      notes: formNotes,
+      stakes: formStakes,
+      skillRating: formSkill,
+      physicalDescription: formPhysical || undefined,
+      betSizingNotes: formBetSizing || undefined,
+      photoUrl: formPhoto || null,
+      encounters: [],
+      lastSeen: new Date().toISOString().split("T")[0],
+      createdBy: "p1",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    // Optimistic: show immediately
+    startTransition(() => {
+      addOptimistic(optimisticEntry);
+    });
+
     setFormSaving(true);
+    resetForm();
+    setShowForm(false);
+
     try {
       const res = await fetch("/api/opponents", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          opponentName: formName.trim(),
-          spotId: formSpot || "roots",
-          tags: formTags,
-          notes: formNotes,
-          stakes: formStakes,
-          skillRating: formSkill,
-          physicalDescription: formPhysical || null,
-          betSizingNotes: formBetSizing || null,
-          photoUrl: formPhoto || null,
+          opponentName: optimisticEntry.opponentName,
+          spotId: optimisticEntry.spotId,
+          tags: optimisticEntry.tags,
+          notes: optimisticEntry.notes,
+          stakes: optimisticEntry.stakes,
+          skillRating: optimisticEntry.skillRating,
+          physicalDescription: optimisticEntry.physicalDescription || null,
+          betSizingNotes: optimisticEntry.betSizingNotes || null,
+          photoUrl: optimisticEntry.photoUrl || null,
           createdBy: "p1",
         }),
       });
@@ -185,25 +222,27 @@ function IntelligenceContent() {
 
       const newOpponent: OpponentNote = await res.json();
 
-      // Immediately prepend to list
+      // Replace optimistic with real data
       setOpponents((prev) => [newOpponent, ...prev]);
       setSelectedOpponent(newOpponent);
-      setFormSaved(true);
-      resetForm();
+      toast(`${newOpponent.opponentName} を登録しました`, "success");
 
-      setTimeout(() => {
-        setFormSaved(false);
-        setShowForm(false);
-      }, 1500);
+      // Force revalidation for other clients
+      router.refresh();
     } catch {
-      setFetchError("登録に失敗しました。再度お試しください。");
+      // Remove optimistic entry on failure
+      setOpponents((prev) => prev.filter((o) => o.id !== tempId));
+      toast("登録に失敗しました。再度お試しください。", "error");
     } finally {
       setFormSaving(false);
     }
   };
 
+  // ── Use optimistic list for display ──
+  const displayList = isPending ? optimisticOpponents : opponents;
+
   // ── Filtering ──
-  const filtered = opponents.filter((note) => {
+  const filtered = displayList.filter((note) => {
     if (spotFilter !== "all" && note.spotId !== spotFilter) return false;
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
@@ -234,7 +273,7 @@ function IntelligenceContent() {
         </div>
         <div className="ml-auto flex items-center gap-2">
           <Badge variant="outline" className="font-number text-xs">
-            {opponents.length} 件
+            {displayList.length} 件
           </Badge>
           <Button size="sm" onClick={() => setShowForm(!showForm)}>
             {showForm ? <X className="mr-1 h-3.5 w-3.5" /> : <Plus className="mr-1 h-3.5 w-3.5" />}
@@ -272,12 +311,12 @@ function IntelligenceContent() {
                   <div className="space-y-1">
                     <Label className="text-xs">名前 *</Label>
                     <Input value={formName} onChange={(e) => setFormName(e.target.value)}
-                      placeholder="相手の名前・ニックネーム" />
+                      placeholder="相手の名前・ニックネーム" className="h-11" />
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs">スポット</Label>
                     <Select value={formSpot} onValueChange={setFormSpot}>
-                      <SelectTrigger><SelectValue placeholder="選択" /></SelectTrigger>
+                      <SelectTrigger className="h-11"><SelectValue placeholder="選択" /></SelectTrigger>
                       <SelectContent>
                         {OSAKA_SPOTS.map((s) => (
                           <SelectItem key={s.id} value={s.id}>{s.shortName}</SelectItem>
@@ -288,7 +327,7 @@ function IntelligenceContent() {
                   <div className="space-y-1">
                     <Label className="text-xs">ステークス</Label>
                     <Input value={formStakes} onChange={(e) => setFormStakes(e.target.value)}
-                      placeholder="100/200" className="font-number" />
+                      placeholder="100/200" className="font-number h-11" />
                   </div>
                 </div>
 
@@ -308,7 +347,10 @@ function IntelligenceContent() {
                   <Badge
                     key={tag}
                     variant={formTags.includes(tag) ? "default" : "outline"}
-                    className={cn("cursor-pointer text-[10px]", formTags.includes(tag) && OPPONENT_TAG_COLORS[tag])}
+                    className={cn(
+                      "cursor-pointer text-[10px] min-h-[28px] px-2",
+                      formTags.includes(tag) && OPPONENT_TAG_COLORS[tag],
+                    )}
                     onClick={() => toggleFormTag(tag)}
                   >
                     {OPPONENT_TAG_LABELS[tag]}
@@ -339,11 +381,9 @@ function IntelligenceContent() {
               </div>
             </div>
 
-            <Button className="w-full" onClick={handleFormSave} disabled={!formName.trim() || formSaving}>
+            <Button className="w-full h-11" onClick={handleFormSave} disabled={!formName.trim() || formSaving}>
               {formSaving ? (
                 <><Loader2 className="mr-2 h-4 w-4 animate-spin" />保存中...</>
-              ) : formSaved ? (
-                "登録しました！"
               ) : (
                 "対戦相手を登録"
               )}
@@ -357,16 +397,16 @@ function IntelligenceContent() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input placeholder="名前・メモ・タグで検索..." value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
+            onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 h-11" />
         </div>
         <div className="flex flex-wrap gap-1">
           <Badge variant={spotFilter === "all" ? "default" : "outline"}
-            className="cursor-pointer" onClick={() => setSpotFilter("all")}>
+            className="cursor-pointer min-h-[28px]" onClick={() => setSpotFilter("all")}>
             全スポット
           </Badge>
           {OSAKA_SPOTS.filter((s) => s.category !== "online").slice(0, 6).map((spot) => (
             <Badge key={spot.id} variant={spotFilter === spot.id ? "default" : "outline"}
-              className="cursor-pointer text-[10px]" onClick={() => setSpotFilter(spot.id)}>
+              className="cursor-pointer text-[10px] min-h-[28px]" onClick={() => setSpotFilter(spot.id)}>
               {spot.shortName}
             </Badge>
           ))}
@@ -389,16 +429,18 @@ function IntelligenceContent() {
               filtered.map((note) => {
                 const spot = getSpot(note.spotId);
                 const isSelected = selectedOpponent?.id === note.id;
+                const isOptimistic = note.id.startsWith("temp-");
                 const wins = note.encounters.filter((e) => e.result === "win").length;
                 const losses = note.encounters.filter((e) => e.result === "loss").length;
 
                 return (
                   <button type="button" key={note.id}
                     className={cn(
-                      "w-full rounded-lg border p-4 text-left transition-all cursor-pointer",
+                      "w-full rounded-lg border p-4 text-left transition-all duration-100 cursor-pointer min-h-[44px]",
                       isSelected ? "border-crimson bg-crimson/5" : "hover:border-crimson/30",
+                      isOptimistic && "opacity-60 animate-pulse",
                     )}
-                    onClick={() => setSelectedOpponent(note)}>
+                    onClick={() => !isOptimistic && setSelectedOpponent(note)}>
                     <div className="flex items-start gap-3">
                       {/* Avatar with photo fallback */}
                       {note.photoUrl ? (
@@ -444,7 +486,7 @@ function IntelligenceContent() {
                   </button>
                 );
               })
-            ) : opponents.length === 0 ? (
+            ) : displayList.length === 0 ? (
               /* Completely empty — no opponents registered yet */
               <div className="rounded-lg border border-dashed p-12 text-center space-y-3">
                 <UserCircle className="mx-auto h-10 w-10 text-muted-foreground/40" />
@@ -454,7 +496,7 @@ function IntelligenceContent() {
                 <p className="text-xs text-muted-foreground/70">
                   「新規登録」ボタンまたは下の＋ボタンから最初の対戦相手を登録しましょう
                 </p>
-                <Button variant="outline" size="sm" onClick={() => setShowForm(true)}>
+                <Button variant="outline" size="sm" className="min-h-[44px]" onClick={() => setShowForm(true)}>
                   <Plus className="mr-1 h-3.5 w-3.5" />最初の対戦相手を登録
                 </Button>
               </div>
@@ -465,12 +507,12 @@ function IntelligenceContent() {
               </div>
             )}
 
-            {/* Floating "+" button */}
+            {/* Floating "+" button — 48x48 for mobile touch */}
             {!showForm && (
               <button
                 type="button"
                 onClick={() => setShowForm(true)}
-                className="fixed bottom-24 right-6 md:absolute md:bottom-4 md:right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full border-2 border-crimson bg-crimson text-white transition-transform hover:scale-110"
+                className="fixed bottom-24 right-6 md:absolute md:bottom-4 md:right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full border-2 border-crimson bg-crimson text-white transition-all duration-100 active:scale-95"
                 aria-label="新規登録"
               >
                 <Plus className="h-6 w-6" />
@@ -560,7 +602,7 @@ function IntelligenceContent() {
                           const encSpot = getSpot(enc.spotId);
                           return (
                             <div key={`${enc.date}-${i}`}
-                              className="flex items-center gap-3 border-b border-border/50 py-2.5 last:border-0">
+                              className="flex items-center gap-3 border-b border-border/50 py-2.5 last:border-0 min-h-[44px]">
                               <ResultIcon result={enc.result} />
                               <span className="font-number text-xs text-muted-foreground w-20 shrink-0">{enc.date}</span>
                               {encSpot && (<span className="spot-badge shrink-0"><MapPin className="h-2 w-2" />{encSpot.shortName}</span>)}
@@ -582,7 +624,7 @@ function IntelligenceContent() {
                   <div className="text-center">
                     <Crosshair className="mx-auto h-8 w-8 text-muted-foreground" />
                     <p className="mt-3 text-sm text-muted-foreground">
-                      {opponents.length === 0
+                      {displayList.length === 0
                         ? "対戦相手を登録すると、ここに詳細が表示されます"
                         : "左のリストから対戦相手を選択してください"}
                     </p>

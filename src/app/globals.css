@@ -269,7 +269,61 @@ body {
 /* パッキリ: No shadows anywhere */
 * {
   box-shadow: none !important;
-  text-shadow: none !important;
+}
+
+/* ========================================
+   Haptic transitions — 0.1s snap feel
+   ======================================== */
+button, a, [role="button"] {
+  transition: color 0.1s, background-color 0.1s, border-color 0.1s, opacity 0.1s;
+}
+
+/* ========================================
+   Mobile Nav — Blur glass bottom bar
+   ======================================== */
+.mobile-nav-blur {
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+:root .mobile-nav-blur { background: rgba(241, 245, 249, 0.82); }
+.dark .mobile-nav-blur { background: rgba(2, 6, 23, 0.82); }
+
+/* Safe area insets */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* ========================================
+   Neon member names (dark mode glow)
+   ======================================== */
+.dark .member-name-neon {
+  color: #00FF9F;
+  text-shadow: 0 0 8px rgba(0, 255, 159, 0.5), 0 0 20px rgba(0, 255, 159, 0.2) !important;
+}
+:root .member-name-neon {
+  color: #2563EB;
+  font-weight: 700;
+}
+
+/* ========================================
+   Toast notification — パッキリ red border
+   ======================================== */
+.toast-pakkiri {
+  border: 2px solid #DC2626;
+  background: var(--card);
+  color: var(--foreground);
+  animation: toast-in 0.2s ease-out;
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes toast-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(16px) scale(0.96); }
 }
 
 /* Animated border pulse for tournament cards */

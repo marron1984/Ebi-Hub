@@ -159,7 +159,7 @@ export default function MembersPage() {
                   <div className="min-w-0 flex-1 space-y-1.5">
                     {/* Name + Crown + Kadoma Badge */}
                     <div className="flex items-center gap-2">
-                      <CardTitle className="text-base">
+                      <CardTitle className="text-base member-name-neon">
                         {player.name}
                       </CardTitle>
                       {isAdmin && (
