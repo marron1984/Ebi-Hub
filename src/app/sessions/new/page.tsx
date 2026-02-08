@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import {
   Save, Clock, MapPin, DollarSign, TrendingUp,
-  Building2, Globe, Calendar, ArrowRightLeft,
+  Building2, Globe, Calendar, ArrowRightLeft, ClipboardList,
 } from "lucide-react";
 import {
   POKER_CURRENCIES, CURRENCY_LIST, getDefaultCurrency, getDefaultStakes,
@@ -22,6 +22,8 @@ import {
 } from "@/lib/currency";
 import { OSAKA_SPOTS } from "@/lib/poker-spots";
 import { getSessionDateFromParts, isLateNightSession, calculateDuration } from "@/lib/session-date";
+import { TablemateSelector } from "@/components/check-in/tablemate-selector";
+import Link from "next/link";
 import type { GameType, Venue } from "@/types/poker";
 import type { SessionStatus } from "@/lib/currency";
 
@@ -71,6 +73,7 @@ export default function NewSessionPage() {
   const [status, setStatus] = useState<SessionStatus>("OPEN");
   const [notes, setNotes] = useState("");
   const [saved, setSaved] = useState(false);
+  const [tablemates, setTablemates] = useState<string[]>([]);
 
   // --- Derived ---
   const currencyInfo = POKER_CURRENCIES[currency];
@@ -456,7 +459,34 @@ export default function NewSessionPage() {
             </CardContent>
           </Card>
 
-          {/* ---- Card 4: セッションメモ ---- */}
+          {/* ---- Card 4: 同卓者選択 ---- */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <ClipboardList className="h-4 w-4 text-emerald" />
+                同卓者 &amp; ハンド記録
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <TablemateSelector
+                selectedOpponents={tablemates}
+                onToggle={(name) =>
+                  setTablemates((prev) =>
+                    prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name],
+                  )
+                }
+                onAddNew={(name) => setTablemates((prev) => [...prev, name])}
+              />
+              <Link href="/hands/new" className="block">
+                <Button variant="outline" className="w-full gap-2">
+                  <ClipboardList className="h-4 w-4" />
+                  ビジュアル・ハンドレコーダーへ
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          {/* ---- Card 5: セッションメモ ---- */}
           <Card>
             <CardHeader>
               <CardTitle className="text-base">セッションメモ</CardTitle>

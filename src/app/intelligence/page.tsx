@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -57,13 +58,22 @@ const ALL_TAGS: OpponentTag[] = [
   "OVERBET_FREQ", "WEAK_POSTFLOP", "STRONG_PREFLOP", "POSITIONAL_AWARE",
 ];
 
-export default function IntelligencePage() {
+function IntelligenceContent() {
+  const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [spotFilter, setSpotFilter] = useState("all");
+  const [opponents, setOpponents] = useState<OpponentNote[]>(mockOpponentNotes);
   const [selectedOpponent, setSelectedOpponent] = useState<OpponentNote | null>(
     mockOpponentNotes[0] ?? null,
   );
   const [showForm, setShowForm] = useState(false);
+
+  // Open form when navigated with ?register=true
+  useEffect(() => {
+    if (searchParams.get("register") === "true") {
+      setShowForm(true);
+    }
+  }, [searchParams]);
 
   // Registration form
   const [formName, setFormName] = useState("");
@@ -81,12 +91,50 @@ export default function IntelligencePage() {
     setFormTags((prev) => prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]);
   };
 
-  const handleFormSave = () => {
-    setFormSaved(true);
-    setTimeout(() => { setFormSaved(false); setShowForm(false); }, 1500);
+  const resetForm = () => {
+    setFormName("");
+    setFormSpot("");
+    setFormStakes("100/200");
+    setFormSkill(3);
+    setFormTags([]);
+    setFormNotes("");
+    setFormPhysical("");
+    setFormBetSizing("");
+    setFormPhoto(undefined);
   };
 
-  const filtered = mockOpponentNotes.filter((note) => {
+  const handleFormSave = () => {
+    if (!formName.trim()) return;
+
+    // Create new opponent note and add to list immediately
+    const newOpponent: OpponentNote = {
+      id: `opp-${Date.now()}`,
+      opponentName: formName.trim(),
+      spotId: formSpot || "roots",
+      tags: formTags,
+      notes: formNotes,
+      stakes: formStakes,
+      skillRating: formSkill,
+      physicalDescription: formPhysical || undefined,
+      betSizingNotes: formBetSizing || undefined,
+      encounters: [],
+      lastSeen: new Date().toISOString().split("T")[0],
+      createdBy: "p1",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    setOpponents((prev) => [newOpponent, ...prev]);
+    setSelectedOpponent(newOpponent);
+    setFormSaved(true);
+    resetForm();
+    setTimeout(() => {
+      setFormSaved(false);
+      setShowForm(false);
+    }, 1500);
+  };
+
+  const filtered = opponents.filter((note) => {
     if (spotFilter !== "all" && note.spotId !== spotFilter) return false;
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
@@ -114,7 +162,7 @@ export default function IntelligencePage() {
         </div>
         <div className="ml-auto flex items-center gap-2">
           <Badge variant="outline" className="font-number text-xs">
-            {mockOpponentNotes.length} 件
+            {opponents.length} 件
           </Badge>
           <Button size="sm" onClick={() => setShowForm(!showForm)}>
             {showForm ? <X className="mr-1 h-3.5 w-3.5" /> : <Plus className="mr-1 h-3.5 w-3.5" />}
@@ -139,7 +187,7 @@ export default function IntelligencePage() {
               <div className="flex-1 space-y-3">
                 <div className="grid gap-3 sm:grid-cols-3">
                   <div className="space-y-1">
-                    <Label className="text-xs">名前</Label>
+                    <Label className="text-xs">名前 *</Label>
                     <Input value={formName} onChange={(e) => setFormName(e.target.value)}
                       placeholder="相手の名前・ニックネーム" />
                   </div>
@@ -208,7 +256,7 @@ export default function IntelligencePage() {
               </div>
             </div>
 
-            <Button className="w-full" onClick={handleFormSave} disabled={!formName}>
+            <Button className="w-full" onClick={handleFormSave} disabled={!formName.trim()}>
               {formSaved ? "登録しました！" : "対戦相手を登録"}
             </Button>
           </CardContent>
@@ -238,7 +286,7 @@ export default function IntelligencePage() {
 
       <div className="grid gap-6 lg:grid-cols-5">
         {/* Left: Wanted List */}
-        <div className="space-y-2 lg:col-span-2">
+        <div className="space-y-2 lg:col-span-2 relative">
           {filtered.map((note) => {
             const spot = getSpot(note.spotId);
             const isSelected = selectedOpponent?.id === note.id;
@@ -285,6 +333,18 @@ export default function IntelligencePage() {
               <p className="text-sm text-muted-foreground">該当する対戦相手がいません</p>
             </div>
           )}
+
+          {/* Floating "+" button */}
+          {!showForm && (
+            <button
+              type="button"
+              onClick={() => setShowForm(true)}
+              className="fixed bottom-24 right-6 md:absolute md:bottom-4 md:right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full border-2 border-crimson bg-crimson text-white transition-transform hover:scale-110"
+              aria-label="新規登録"
+            >
+              <Plus className="h-6 w-6" />
+            </button>
+          )}
         </div>
 
         {/* Right: Detail */}
@@ -324,10 +384,12 @@ export default function IntelligencePage() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="rounded-lg border p-4 space-y-1">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">戦略メモ</p>
-                    <p className="text-sm leading-relaxed">{selectedOpponent.notes}</p>
-                  </div>
+                  {selectedOpponent.notes && (
+                    <div className="rounded-lg border p-4 space-y-1">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">戦略メモ</p>
+                      <p className="text-sm leading-relaxed">{selectedOpponent.notes}</p>
+                    </div>
+                  )}
                   <div className="grid gap-4 sm:grid-cols-2">
                     {selectedOpponent.physicalDescription && (
                       <div className="rounded-lg border p-4 space-y-1">
@@ -394,5 +456,13 @@ export default function IntelligencePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function IntelligencePage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-sm text-muted-foreground">読み込み中...</div>}>
+      <IntelligenceContent />
+    </Suspense>
   );
 }

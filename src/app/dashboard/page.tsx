@@ -5,6 +5,7 @@ import {
   ArrowUpRight, ArrowDownRight, MapPin,
   BookOpen, MessageSquare,
   Radio, Calendar, ChevronRight, Zap, Send,
+  Plus, Crosshair,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,12 +13,14 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { StatsCard } from "@/components/poker/stats-card";
 import { ProfitChart } from "@/components/poker/profit-chart";
 import { SessionTable } from "@/components/poker/session-table";
 import { PrivacyToggle } from "@/components/poker/privacy-toggle";
 import { CardGroup } from "@/components/poker/card-display";
 import { BroadcastButton } from "@/components/share/broadcast-button";
+import { ActiveMembersPanel } from "@/components/check-in/check-in-panel";
 import {
   mockSessions, mockStats, mockActivities, mockHands,
   mockTournaments, mockDailyEvents,
@@ -167,7 +170,32 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ===== 1. PERSONAL STATS (TOP) ===== */}
+      {/* ===== GLOBAL ACTIONS ===== */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Link href="/sessions/new" className="block">
+          <Button
+            variant="outline"
+            className="w-full h-14 text-base font-bold border gap-3 hover:border-emerald hover:text-emerald transition-colors"
+          >
+            <Plus className="h-5 w-5" />
+            セッション開始
+          </Button>
+        </Link>
+        <Link href="/intelligence?register=true" className="block">
+          <Button
+            variant="outline"
+            className="w-full h-14 text-base font-bold border gap-3 hover:border-crimson hover:text-crimson transition-colors"
+          >
+            <Crosshair className="h-5 w-5" />
+            対戦相手を登録
+          </Button>
+        </Link>
+      </div>
+
+      {/* ===== ACTIVE MEMBERS (Check-in) ===== */}
+      <ActiveMembersPanel />
+
+      {/* ===== 1. PERSONAL STATS ===== */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title="累積収支(JPY)"

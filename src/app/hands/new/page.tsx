@@ -260,9 +260,17 @@ export default function NewHandPage() {
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-2">
                         <Label>収支 (BB)</Label>
-                        <Input type="number" placeholder="0" value={result}
-                          onChange={(e) => setResult(e.target.value)}
+                        <Input type="number" placeholder="0" min="-1000" max="1000" value={result}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            if (v === "" || v === "-") { setResult(v); return; }
+                            const n = parseFloat(v);
+                            if (!isNaN(n) && n >= -1000 && n <= 1000) setResult(v);
+                          }}
                           className={cn("font-number text-lg font-bold", result && parseFloat(result) >= 0 ? "text-emerald" : "text-crimson")} />
+                        {result && Math.abs(parseFloat(result)) > 500 && (
+                          <p className="text-[10px] text-gold">大きな値です。入力を確認してください。</p>
+                        )}
                       </div>
                       <div className="space-y-2">
                         <Label>EV評価</Label>
@@ -281,8 +289,13 @@ export default function NewHandPage() {
                 {street !== "showdown" && (
                   <div className="space-y-2">
                     <Label>ポットサイズ (BB)</Label>
-                    <Input type="number" placeholder="0" value={streetData[street].pot}
-                      onChange={(e) => updateStreetData(street, "pot", e.target.value)} className="font-number" />
+                    <Input type="number" placeholder="0" min="0" max="2000" value={streetData[street].pot}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === "") { updateStreetData(street, "pot", v); return; }
+                        const n = parseFloat(v);
+                        if (!isNaN(n) && n >= 0 && n <= 2000) updateStreetData(street, "pot", v);
+                      }} className="font-number" />
                   </div>
                 )}
                 <div className="space-y-2">

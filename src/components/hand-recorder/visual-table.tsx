@@ -79,7 +79,11 @@ export function VisualTable({
 
   const handleAction = (action: Action) => {
     if (!activePosition) return;
-    const amount = betAmount ? parseFloat(betAmount) : undefined;
+    const raw = betAmount ? parseFloat(betAmount) : undefined;
+    // BB validation: clamp to reasonable range (0.5 - 500 BB)
+    const amount = raw !== undefined
+      ? Math.max(0.5, Math.min(500, raw))
+      : undefined;
     onAddAction({
       position: activePosition,
       action,
@@ -93,6 +97,10 @@ export function VisualTable({
     setActivePosition(null);
     setBetAmount("");
   };
+
+  const bbError = betAmount && (parseFloat(betAmount) > 500 || parseFloat(betAmount) < 0)
+    ? "0.5〜500BBの範囲で入力してください"
+    : null;
 
   return (
     <div className="space-y-3">
@@ -196,16 +204,19 @@ export function VisualTable({
           </div>
 
           {/* BB Amount input */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Input
               type="number"
               step="0.5"
+              min="0.5"
+              max="500"
               placeholder="BB"
               value={betAmount}
               onChange={(e) => setBetAmount(e.target.value)}
-              className="h-8 w-24 font-number text-sm"
+              className={cn("h-8 w-24 font-number text-sm", bbError && "border-crimson")}
             />
             <span className="text-xs text-muted-foreground">BB</span>
+            {bbError && <span className="text-[10px] text-crimson w-full">{bbError}</span>}
             {/* Quick size presets */}
             {[2.5, 3, 6, 10].map((bb) => (
               <button

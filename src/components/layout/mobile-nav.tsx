@@ -7,13 +7,13 @@ import {
   ClipboardList,
   Plus,
   Users,
-  Calendar,
+  Crosshair,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
   { name: "戦績", href: "/dashboard", icon: LayoutDashboard },
-  { name: "イベント", href: "/events", icon: Calendar },
+  { name: "対戦DB", href: "/intelligence", icon: Crosshair },
   { name: "記録", href: "/sessions/new", icon: Plus },
   { name: "HH", href: "/hands", icon: ClipboardList },
   { name: "チーム", href: "/members", icon: Users },
