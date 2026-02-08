@@ -118,7 +118,9 @@ export default function NewHandPage() {
     river: { pot: "", thought: "", board: [] },
     showdown: { pot: "", thought: "", board: [] },
   });
+  const [villainCards, setVillainCards] = useState<CardType[]>([]);
   const [result, setResult] = useState("");
+  const [evAssessment, setEvAssessment] = useState<"positive" | "neutral" | "negative" | "">("");
   const [selectedTags, setSelectedTags] = useState<HandTag[]>([]);
   const [notes, setNotes] = useState("");
   const [saved, setSaved] = useState(false);
@@ -204,17 +206,44 @@ export default function NewHandPage() {
                     onChange={(cards) => updateStreetData(street, "board", cards)}
                     maxCards={street === "flop" ? 3 : street === "turn" ? 4 : 5} />
                 )}
-                <div className="space-y-2">
-                  <Label>ポットサイズ (BB)</Label>
-                  <Input type="number" placeholder="0" value={streetData[street].pot}
-                    onChange={(e) => updateStreetData(street, "pot", e.target.value)} className="font-number" />
-                </div>
+                {street === "showdown" && (
+                  <>
+                    <CardSelector label="相手ハンド" selectedCards={villainCards} onChange={setVillainCards}
+                      maxCards={gameType === "PLO" ? 4 : gameType === "PLO5" ? 5 : 2} />
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>収支 (BB)</Label>
+                        <Input type="number" placeholder="0" value={result}
+                          onChange={(e) => setResult(e.target.value)}
+                          className={cn("font-number text-lg font-bold", result && parseFloat(result) >= 0 ? "text-emerald" : "text-crimson")} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>EV評価</Label>
+                        <Select value={evAssessment} onValueChange={(v) => setEvAssessment(v as typeof evAssessment)}>
+                          <SelectTrigger><SelectValue placeholder="EV評価を選択" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="positive">+EV（期待値プラス）</SelectItem>
+                            <SelectItem value="neutral">Neutral（中立）</SelectItem>
+                            <SelectItem value="negative">-EV（期待値マイナス）</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </>
+                )}
+                {street !== "showdown" && (
+                  <div className="space-y-2">
+                    <Label>ポットサイズ (BB)</Label>
+                    <Input type="number" placeholder="0" value={streetData[street].pot}
+                      onChange={(e) => updateStreetData(street, "pot", e.target.value)} className="font-number" />
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label>思考プロセス (Markdown対応)</Label>
                   <MarkdownEditor
                     value={streetData[street].thought}
                     onChange={(v) => updateStreetData(street, "thought", v)}
-                    placeholder="このストリートでの思考を記述... レンジ、エクイティ、戦略判断など"
+                    placeholder={street === "showdown" ? "ショーダウン結果の分析、相手のレンジ評価..." : "このストリートでの思考を記述... レンジ、エクイティ、戦略判断など"}
                   />
                 </div>
               </CardContent>
@@ -231,14 +260,33 @@ export default function NewHandPage() {
 
         <div className="space-y-4">
           <Card>
-            <CardHeader><CardTitle className="text-base">結果</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>損益 (BB)</Label>
-                <Input type="number" placeholder="0" value={result}
-                  onChange={(e) => setResult(e.target.value)}
-                  className={cn("font-number text-lg font-bold", result && parseFloat(result) >= 0 ? "text-emerald" : "text-crimson")} />
+            <CardHeader><CardTitle className="text-base">結果サマリー</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">損益</span>
+                <span className={cn("font-number text-lg font-bold", result && parseFloat(result) >= 0 ? "text-emerald" : "text-crimson")}>
+                  {result ? `${parseFloat(result) >= 0 ? "+" : ""}${result}BB` : "—"}
+                </span>
               </div>
+              {evAssessment && (
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">EV評価</span>
+                  <Badge variant="outline" className={cn("text-xs",
+                    evAssessment === "positive" && "text-emerald border-emerald/30",
+                    evAssessment === "negative" && "text-crimson border-crimson/30",
+                  )}>
+                    {evAssessment === "positive" ? "+EV" : evAssessment === "negative" ? "-EV" : "Neutral"}
+                  </Badge>
+                </div>
+              )}
+              {villainCards.length > 0 && (
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">相手ハンド</span>
+                  <span className="font-number text-sm">
+                    {villainCards.map((c) => `${c.rank}${suitSymbols[c.suit]}`).join("")}
+                  </span>
+                </div>
+              )}
             </CardContent>
           </Card>
 

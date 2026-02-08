@@ -13,6 +13,14 @@ export interface PokerSpot {
   notes?: string;
 }
 
+export interface OpponentEncounter {
+  date: string;
+  spotId: string;
+  stakes: string;
+  result: "win" | "loss" | "neutral";
+  note?: string;
+}
+
 export interface OpponentNote {
   id: string;
   opponentName: string;
@@ -20,6 +28,14 @@ export interface OpponentNote {
   tags: OpponentTag[];
   notes: string;
   stakes: string;
+  /** Skill rating 1-5 */
+  skillRating: number;
+  /** Physical description (appearance, items, habits) */
+  physicalDescription?: string;
+  /** Bet sizing tendencies */
+  betSizingNotes?: string;
+  /** Encounter log entries */
+  encounters: OpponentEncounter[];
   lastSeen: string;
   createdBy: string;
   createdAt: string;

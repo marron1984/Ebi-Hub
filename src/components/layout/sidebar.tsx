@@ -11,6 +11,7 @@ import {
   BookOpen,
   Calendar,
   Wallet,
+  Crosshair,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./theme-toggle";
@@ -22,6 +23,7 @@ const navigation = [
   { name: "セッション記録", href: "/sessions/new", icon: Plus },
   { name: "ハンドレビュー", href: "/hands", icon: ClipboardList },
   { name: "レンジ表", href: "/ranges", icon: BookOpen },
+  { name: "対戦相手DB", href: "/intelligence", icon: Crosshair },
   { name: "資産管理", href: "/assets", icon: Wallet },
   { name: "メンバー", href: "/members", icon: Users },
 ];

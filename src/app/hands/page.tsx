@@ -10,7 +10,7 @@ import { CardGroup } from "@/components/poker/card-display";
 import { HandTimeline } from "@/components/poker/hand-timeline";
 import { ThreadedComments } from "@/components/poker/threaded-comments";
 import { mockHands } from "@/lib/mock-data";
-import { cn, formatCurrency } from "@/lib/utils";
+import { cn, formatResultBB } from "@/lib/utils";
 import { Plus, Search, Filter, ChevronRight } from "lucide-react";
 import type { HandHistory, HandTag } from "@/types/poker";
 import { TAG_LABELS_JA } from "@/types/poker";
@@ -128,7 +128,7 @@ export default function HandsPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={cn("font-number text-sm font-bold", hand.result >= 0 ? "text-emerald" : "text-crimson")}>
-                    {formatCurrency(hand.result)}
+                    {formatResultBB(hand.result, hand.stakes)}
                   </span>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </div>

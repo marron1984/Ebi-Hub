@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: "Noto Sans JP", "Geist Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", "Roboto Mono", "Geist Mono", ui-monospace, monospace;
+  --font-sans: "Noto Sans JP", var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", var(--font-geist-mono), ui-monospace, monospace;
 
   /* Semantic color tokens */
   --color-background: var(--background);
