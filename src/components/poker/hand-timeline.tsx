@@ -10,7 +10,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { cn, formatCurrency, renderMarkdown } from "@/lib/utils";
+import { cn, formatCurrency, renderMarkdown, amountToBBStr, formatResultBB } from "@/lib/utils";
 import { Brain, MessageSquare } from "lucide-react";
 import { BroadcastButton } from "@/components/share/broadcast-button";
 
@@ -46,7 +46,7 @@ interface HandTimelineProps {
 }
 
 export function HandTimeline({ hand }: HandTimelineProps) {
-  const sym = hand.currency === "JPY" ? "¥" : "$";
+  const stakes = hand.stakes;
 
   return (
     <div className="space-y-6">
@@ -74,6 +74,9 @@ export function HandTimeline({ hand }: HandTimelineProps) {
               hand.result >= 0 ? "text-emerald" : "text-crimson"
             )}
           >
+            {formatResultBB(hand.result, stakes)}
+          </p>
+          <p className="font-number text-xs text-muted-foreground">
             {formatCurrency(hand.result, hand.currency)}
           </p>
         </div>
@@ -109,7 +112,7 @@ export function HandTimeline({ hand }: HandTimelineProps) {
                         )}
                       </div>
                       <span className="font-number text-sm text-muted-foreground">
-                        ポット: {sym}{street.potSize}
+                        ポット: {amountToBBStr(street.potSize, stakes)}
                       </span>
                     </div>
 
@@ -143,7 +146,7 @@ export function HandTimeline({ hand }: HandTimelineProps) {
                           </span>
                           {action.amount && (
                             <span className="font-number text-xs text-muted-foreground">
-                              {sym}{action.amount}
+                              {amountToBBStr(action.amount, stakes)}
                             </span>
                           )}
                           {action.isHero && (

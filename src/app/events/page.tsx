@@ -140,7 +140,7 @@ export default function EventsPage() {
         <header className="mb-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Trophy className="h-7 w-7 text-[#2563EB] dark:text-[#FFD700]" />
+              <Trophy className="h-7 w-7 text-primary" />
               <div>
                 <h1 className="text-2xl font-bold tracking-tight">
                   大阪ポーカー掲示板
@@ -172,7 +172,7 @@ export default function EventsPage() {
             className={cn(
               "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors cursor-pointer",
               spotFilter === "all"
-                ? "border-[#2563EB] bg-[#2563EB]/10 text-[#2563EB] dark:border-[#00FF9F] dark:bg-[#00FF9F]/10 dark:text-[#00FF9F]"
+                ? "border-primary bg-primary/10 text-primary"
                 : "border-border bg-card text-muted-foreground hover:text-foreground"
             )}
           >
@@ -186,7 +186,7 @@ export default function EventsPage() {
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors cursor-pointer",
                 spotFilter === spot.id
-                  ? "border-[#2563EB] bg-[#2563EB]/10 text-[#2563EB] dark:border-[#00FF9F] dark:bg-[#00FF9F]/10 dark:text-[#00FF9F]"
+                  ? "border-primary bg-primary/10 text-primary"
                   : "border-border bg-card text-muted-foreground hover:text-foreground"
               )}
             >
@@ -199,7 +199,7 @@ export default function EventsPage() {
         {/* ===== Major Tournaments Section ===== */}
         <section className="mb-8">
           <div className="mb-3 flex items-center gap-2">
-            <Star className="h-4 w-4 text-[#FFD700]" />
+            <Star className="h-4 w-4 text-gold" />
             <h2 className="text-sm font-bold uppercase tracking-wider">
               大型大会スケジュール
             </h2>
@@ -209,7 +209,7 @@ export default function EventsPage() {
           </div>
 
           {filteredTournaments.length === 0 ? (
-            <div className="rounded border border-border bg-white p-8 text-center text-sm text-muted-foreground dark:bg-[#0B1120]">
+            <div className="rounded border border-border bg-card p-8 text-center text-sm text-muted-foreground dark:bg-[#0B1120]">
               該当する大会がありません
             </div>
           ) : (
@@ -227,7 +227,7 @@ export default function EventsPage() {
         {/* ===== Today's Board Section ===== */}
         <section>
           <div className="mb-3 flex items-center gap-2">
-            <Plane className="h-4 w-4 text-[#2563EB] dark:text-[#00FF9F]" />
+            <Plane className="h-4 w-4 text-primary" />
             <h2 className="text-sm font-bold uppercase tracking-wider">
               本日の運行状況
             </h2>
@@ -237,13 +237,13 @@ export default function EventsPage() {
           </div>
 
           {filteredDailyEvents.length === 0 ? (
-            <div className="rounded border border-border bg-white p-8 text-center text-sm text-muted-foreground dark:bg-[#0B1120]">
+            <div className="rounded border border-border bg-card p-8 text-center text-sm text-muted-foreground dark:bg-[#0B1120]">
               該当するイベントがありません
             </div>
           ) : (
             <div className="overflow-x-auto">
               {/* Table header */}
-              <div className="hidden border-b border-border bg-[#E2E8F0] px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground dark:bg-[#0F172A] sm:grid sm:grid-cols-[70px_64px_1fr_100px_80px_72px]">
+              <div className="hidden border-b border-border bg-secondary px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground sm:grid sm:grid-cols-[70px_64px_1fr_100px_80px_72px]">
                 <div>TIME</div>
                 <div>SPOT</div>
                 <div>EVENT</div>
@@ -279,7 +279,7 @@ function TournamentRow({ tournament }: { tournament: MockTournament }) {
   return (
     <div
       className={cn(
-        "relative rounded border border-border bg-white dark:bg-[#0B1120]",
+        "relative rounded border border-border bg-card",
         "border-l-[4px] overflow-hidden transition-colors",
         isOpen && "animate-pulse-border"
       )}
@@ -370,7 +370,7 @@ function TournamentRow({ tournament }: { tournament: MockTournament }) {
 
       {/* Notes bar */}
       {tournament.notes && (
-        <div className="border-t border-border bg-[#F8FAFC] px-4 py-1.5 text-[11px] text-muted-foreground dark:bg-[#0F172A]">
+        <div className="border-t border-border bg-muted px-4 py-1.5 text-[11px] text-muted-foreground">
           {tournament.notes}
         </div>
       )}
@@ -398,8 +398,8 @@ function DailyEventRow({
       className={cn(
         "border-b border-border px-3 py-2.5 transition-colors",
         isEven
-          ? "bg-white dark:bg-[#0B1120]"
-          : "bg-[#F8FAFC] dark:bg-[#0F172A]",
+          ? "bg-card"
+          : "bg-muted",
         status.label === "開催中" && "bg-emerald/[0.03] dark:bg-emerald/[0.03]"
       )}
     >

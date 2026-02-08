@@ -70,7 +70,7 @@ function CardSelector({ label, selectedCards, onChange, maxCards }: {
         {selectedCards.map((card, i) => (
           <button key={`${card.rank}${card.suit}-${i}`} type="button"
             onClick={() => onChange(selectedCards.filter((_, idx) => idx !== i))}
-            className={cn("flex h-12 w-9 flex-col items-center justify-center rounded-md border bg-white dark:bg-slate-800 font-bold shadow-sm cursor-pointer hover:border-crimson", suitColors[card.suit])}>
+            className={cn("flex h-12 w-9 flex-col items-center justify-center rounded-md border bg-card font-bold cursor-pointer hover:border-crimson", suitColors[card.suit])}>
             <span className="text-sm leading-none">{card.rank}</span>
             <span className="text-[8px] leading-none">{suitSymbols[card.suit]}</span>
           </button>
@@ -205,7 +205,7 @@ export default function NewHandPage() {
                     maxCards={street === "flop" ? 3 : street === "turn" ? 4 : 5} />
                 )}
                 <div className="space-y-2">
-                  <Label>ポットサイズ ($)</Label>
+                  <Label>ポットサイズ (BB)</Label>
                   <Input type="number" placeholder="0" value={streetData[street].pot}
                     onChange={(e) => updateStreetData(street, "pot", e.target.value)} className="font-number" />
                 </div>
@@ -234,7 +234,7 @@ export default function NewHandPage() {
             <CardHeader><CardTitle className="text-base">結果</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>損益 ($)</Label>
+                <Label>損益 (BB)</Label>
                 <Input type="number" placeholder="0" value={result}
                   onChange={(e) => setResult(e.target.value)}
                   className={cn("font-number text-lg font-bold", result && parseFloat(result) >= 0 ? "text-emerald" : "text-crimson")} />

@@ -5,6 +5,7 @@ import type {
   PlayerStats,
   HandComment,
   RangeChart,
+  RangeAction,
 } from "@/types/poker";
 import type { PokerCurrency } from "@/lib/currency";
 import type { OpponentNote, MemberActivity } from "@/lib/poker-spots";
@@ -14,7 +15,7 @@ import type { OpponentNote, MemberActivity } from "@/lib/poker-spots";
 export const mockPlayers: Player[] = [
   { id: "p1", name: "おにく", role: "leader", joinedAt: "2024-01-15", primarySpotId: "roots" },
   { id: "p2", name: "タカ", role: "member", joinedAt: "2024-02-01", primarySpotId: "ggpl" },
-  { id: "p3", name: "モッチ", role: "member", joinedAt: "2024-02-20", primarySpotId: "casino-stadium" },
+  { id: "p3", name: "バスロもっちバイヤグラ", role: "member", joinedAt: "2024-02-20", primarySpotId: "casino-stadium" },
   { id: "p4", name: "ノセ", role: "member", joinedAt: "2024-03-10", primarySpotId: "poker-live" },
   { id: "p5", name: "便座", role: "member", joinedAt: "2024-04-01", primarySpotId: "blow" },
   { id: "p6", name: "ロキソニン陸斗", role: "member", joinedAt: "2024-05-15", primarySpotId: "jackpot" },
@@ -510,15 +511,17 @@ const RANKS = ["A","K","Q","J","T","9","8","7","6","5","4","3","2"];
 function generateRangeGrid(
   raises: string[],
   calls: string[],
-  threeBets: string[] = []
-): Record<string, "raise" | "call" | "fold" | "3bet" | "mixed"> {
-  const grid: Record<string, "raise" | "call" | "fold" | "3bet" | "mixed"> = {};
+  threeBets: string[] = [],
+  mixed: Record<string, RangeAction> = {},
+): Record<string, RangeAction> {
+  const grid: Record<string, RangeAction> = {};
   for (const r1 of RANKS) {
     for (const r2 of RANKS) {
       const i1 = RANKS.indexOf(r1);
       const i2 = RANKS.indexOf(r2);
       const combo = i1 < i2 ? `${r1}${r2}s` : i1 > i2 ? `${r2}${r1}o` : `${r1}${r2}`;
-      if (threeBets.includes(combo)) grid[combo] = "3bet";
+      if (mixed[combo]) grid[combo] = mixed[combo];
+      else if (threeBets.includes(combo)) grid[combo] = "3bet";
       else if (raises.includes(combo)) grid[combo] = "raise";
       else if (calls.includes(combo)) grid[combo] = "call";
       else grid[combo] = "fold";
@@ -546,6 +549,41 @@ export const mockRanges: RangeChart[] = [
       ["AA","KK","QQ","JJ","TT","AKs","AQs","AJs","A5s","A4s","KQs","AKo","AQo"]
     ),
     createdBy: "p1", createdAt: "2025-01-05T00:00:00Z",
+  },
+  {
+    id: "r3", title: "CO vs BTN 3BET ディフェンス", description: "COオープンに対するBTNの3BETへのディフェンス。GTO混合戦略を含む高精度レンジ。",
+    position: "CO", situation: "3BET Defense vs BTN 3BET",
+    grid: generateRangeGrid(
+      // Pure 4bet (treated as raise for simplicity)
+      [],
+      // Pure calls
+      ["AJs","ATs","KQs","KJs","KTs","QJs","QTs","JTs","T9s","98s","87s","AQo","AJo","KQo"],
+      // Pure 3bet/4bet
+      ["AA","KK"],
+      // Mixed strategies
+      {
+        "QQ": { raise: 55, call: 45 },
+        "JJ": { raise: 35, call: 65 },
+        "TT": { raise: 20, call: 80 },
+        "99": { call: 70, fold: 30 },
+        "88": { call: 55, fold: 45 },
+        "77": { call: 40, fold: 60 },
+        "AKs": { raise: 60, call: 40 },
+        "AQs": { raise: 40, call: 60 },
+        "A5s": { raise: 70, fold: 30 },
+        "A4s": { raise: 55, fold: 45 },
+        "A3s": { fold: 65, raise: 35 },
+        "KQo": { call: 65, fold: 35 },
+        "AKo": { raise: 50, call: 50 },
+        "ATo": { call: 45, fold: 55 },
+        "K9s": { call: 50, fold: 50 },
+        "Q9s": { call: 35, fold: 65 },
+        "J9s": { call: 45, fold: 55 },
+        "76s": { call: 40, fold: 60 },
+        "65s": { call: 35, fold: 65 },
+      },
+    ),
+    createdBy: "p1", createdAt: "2025-01-10T00:00:00Z",
   },
 ];
 
@@ -750,8 +788,8 @@ export const mockActivities: MockActivity[] = [
     type: "comment",
     title: "コメント追加",
     detail: "「ターンのスロープレイは最高の判断」",
-    userName: "モッチ",
-    userInitial: "モ",
+    userName: "バスロもっちバイヤグラ",
+    userInitial: "バ",
     userColor: "#EF4444",
     createdAt: "2025-02-04T12:00:00Z",
   },

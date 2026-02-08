@@ -190,7 +190,7 @@ async function main() {
     },
     {
       id: "p3",
-      name: "モッチ",
+      name: "バスロもっちバイヤグラ",
       role: "member",
       status: "active",
       joinedAt: new Date("2024-03-10"),
@@ -223,7 +223,7 @@ async function main() {
       joinedAt: new Date("2024-06-20"),
       teamId: team.id,
       primarySpotId: "jackpot",
-      notes: "門真代表",
+      notes: "Represent KADOMA-Tobari. Respect",
     },
     {
       id: "p7",

@@ -21,8 +21,32 @@ export function formatCurrency(
   return `${prefix}${sym}${Math.abs(amount).toLocaleString()}`;
 }
 
+/** Parse big blind value from stakes string like "1/2" → 2, "100/200" → 200 */
+export function parseBBFromStakes(stakes: string): number {
+  const parts = stakes.split("/");
+  return parseFloat(parts[parts.length - 1]) || 1;
+}
+
+/** Convert a raw amount to BB count */
+export function amountToBB(amount: number, stakes: string): number {
+  const bb = parseBBFromStakes(stakes);
+  return amount / bb;
+}
+
+/** Format a number as BB string: "+3.0BB" */
 export function formatBB(bb: number): string {
-  return `${bb >= 0 ? "+" : ""}${bb.toFixed(1)} BB`;
+  return `${bb >= 0 ? "+" : ""}${bb.toFixed(1)}BB`;
+}
+
+/** Convert amount to BB and format: amountToBBStr(6, "1/2") → "3.0BB" */
+export function amountToBBStr(amount: number, stakes: string): string {
+  return `${amountToBB(amount, stakes).toFixed(1)}BB`;
+}
+
+/** Format result as signed BB string: "+12.5BB" or "-3.0BB" */
+export function formatResultBB(amount: number, stakes: string): string {
+  const bb = amountToBB(amount, stakes);
+  return formatBB(bb);
 }
 
 export function formatDuration(minutes: number): string {

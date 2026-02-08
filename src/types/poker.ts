@@ -230,13 +230,21 @@ export interface Team {
 
 // ===== Range Library =====
 
+export type RangeActionPure = "raise" | "call" | "fold" | "3bet";
+
+/** Mixed strategy: e.g. { raise: 70, call: 30 } — percentages that sum to 100 */
+export type MixedStrategy = Partial<Record<RangeActionPure, number>>;
+
+/** A cell value: either a pure action string or a mixed strategy object */
+export type RangeAction = RangeActionPure | MixedStrategy;
+
 export interface RangeChart {
   id: string;
   title: string;
   description: string;
   position: Position;
   situation: string;
-  grid: Record<string, "raise" | "call" | "fold" | "3bet" | "mixed">;
+  grid: Record<string, RangeAction>;
   createdBy: string;
   createdAt: string;
 }

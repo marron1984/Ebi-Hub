@@ -33,7 +33,7 @@ export function CardDisplay({
   return (
     <div
       className={cn(
-        "inline-flex flex-col items-center justify-center rounded-md border bg-white dark:bg-slate-800 font-bold shadow-sm",
+        "inline-flex flex-col items-center justify-center rounded-md border bg-card font-bold",
         suitColors[card.suit],
         sizeClasses[size]
       )}

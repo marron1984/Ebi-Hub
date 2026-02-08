@@ -30,7 +30,7 @@ import {
   getCurrencyFlag,
 } from "@/lib/currency";
 import type { PokerCurrency } from "@/lib/currency";
-import { formatDuration, formatCurrency } from "@/lib/utils";
+import { formatDuration, formatCurrency, formatResultBB } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { useState, useMemo } from "react";
 import type { GameType, Venue } from "@/types/poker";
@@ -328,6 +328,9 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex flex-col items-end gap-2 shrink-0">
                   <span className={cn("font-number text-base font-bold", hand.result >= 0 ? "text-emerald" : "text-crimson")}>
+                    {formatResultBB(hand.result, hand.stakes)}
+                  </span>
+                  <span className="font-number text-[10px] text-muted-foreground">
                     {formatCurrency(hand.result, hand.currency)}
                   </span>
                   <BroadcastButton

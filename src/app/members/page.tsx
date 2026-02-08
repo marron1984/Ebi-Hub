@@ -14,7 +14,7 @@ import { Crown, MapPin, Users, DollarSign, Clock, Target, Shield, User } from "l
 const MEMBER_COLORS = [
   "#00FF9F", // おにく
   "#F59E0B", // タカ
-  "#EF4444", // モッチ
+  "#EF4444", // バスロもっちバイヤグラ
   "#3B82F6", // ノセ
   "#8B5CF6", // 便座
   "#EC4899", // ロキソニン陸斗
@@ -139,7 +139,7 @@ export default function MembersPage() {
 
           const isOnFire = activity?.status === "on-fire";
           const isAdmin = player.role === "leader";
-          const isKadoamRep = player.name === "ロキソニン陸斗";
+          const isKadomaRep = player.name === "ロキソニン陸斗";
 
           return (
             <Card key={player.id} className="border bg-card">
@@ -165,12 +165,12 @@ export default function MembersPage() {
                       {isAdmin && (
                         <Crown className="h-4 w-4 shrink-0 text-gold" />
                       )}
-                      {isKadoamRep && (
+                      {isKadomaRep && (
                         <Badge
                           variant="outline"
                           className="border-pink-500/50 bg-pink-500/10 text-[10px] text-pink-400"
                         >
-                          門真代表
+                          Represent KADOMA-Tobari. Respect
                         </Badge>
                       )}
                     </div>
