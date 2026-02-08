@@ -2,8 +2,9 @@
 
 import { useState, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { Camera, X, Image as ImageIcon } from "lucide-react";
+import { Camera, X, Image as ImageIcon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { compressAndEncode } from "@/lib/upload";
 
 interface PhotoUploadProps {
   value?: string;
@@ -13,41 +14,31 @@ interface PhotoUploadProps {
 
 export function PhotoUpload({ value, onChange, className }: PhotoUploadProps) {
   const [preview, setPreview] = useState<string | undefined>(value);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Resize and compress for storage
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const img = new window.Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const MAX = 400;
-        let w = img.width;
-        let h = img.height;
-        if (w > MAX || h > MAX) {
-          const ratio = Math.min(MAX / w, MAX / h);
-          w = Math.round(w * ratio);
-          h = Math.round(h * ratio);
-        }
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext("2d")!;
-        ctx.drawImage(img, 0, 0, w, h);
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
-        setPreview(dataUrl);
-        onChange(dataUrl);
-      };
-      img.src = ev.target?.result as string;
-    };
-    reader.readAsDataURL(file);
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await compressAndEncode(file);
+      setPreview(result.dataUrl);
+      onChange(result.dataUrl);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "アップロードに失敗しました");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleRemove = () => {
     setPreview(undefined);
+    setError(null);
     onChange(undefined);
     if (inputRef.current) inputRef.current.value = "";
   };
@@ -78,6 +69,10 @@ export function PhotoUpload({ value, onChange, className }: PhotoUploadProps) {
             <X className="h-3 w-3" />
           </button>
         </div>
+      ) : loading ? (
+        <div className="flex h-24 w-24 items-center justify-center rounded-lg border-2 border-dashed border-emerald/50 bg-emerald/5">
+          <Loader2 className="h-6 w-6 animate-spin text-emerald" />
+        </div>
       ) : (
         <button
           type="button"
@@ -89,7 +84,11 @@ export function PhotoUpload({ value, onChange, className }: PhotoUploadProps) {
         </button>
       )}
 
-      {!preview && (
+      {error && (
+        <p className="text-[10px] text-crimson">{error}</p>
+      )}
+
+      {!preview && !loading && (
         <Button
           type="button"
           variant="outline"

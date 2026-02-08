@@ -34,6 +34,8 @@ export interface OpponentNote {
   physicalDescription?: string;
   /** Bet sizing tendencies */
   betSizingNotes?: string;
+  /** Uploaded photo for visual ID (Base64 data URL) */
+  photoUrl?: string | null;
   /** Encounter log entries */
   encounters: OpponentEncounter[];
   lastSeen: string;

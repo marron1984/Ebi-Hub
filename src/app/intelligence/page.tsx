@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +11,6 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { PhotoUpload } from "@/components/hand-recorder/photo-upload";
-import { mockOpponentNotes } from "@/lib/mock-data";
 import {
   getSpot,
   OPPONENT_TAG_LABELS,
@@ -24,7 +23,10 @@ import {
   Search, MapPin, Star, Eye, ChevronRight,
   Clock, TrendingUp, TrendingDown, Minus,
   Crosshair, User, Plus, X, Camera,
+  Loader2, UserCircle, AlertCircle,
 } from "lucide-react";
+
+// ─── Reusable sub-components ──────────────────────────────────────
 
 function SkillStars({ rating, interactive, onChange }: {
   rating: number; interactive?: boolean; onChange?: (r: number) => void;
@@ -52,21 +54,74 @@ function ResultIcon({ result }: { result: "win" | "loss" | "neutral" }) {
   return <Minus className="h-3.5 w-3.5 text-muted-foreground" />;
 }
 
+/** Photo avatar with fallback to initial letter */
+function OpponentAvatar({ name, photoUrl, size = "md" }: {
+  name: string; photoUrl?: string | null; size?: "sm" | "md" | "lg";
+}) {
+  const dim = size === "sm" ? "h-12 w-12 text-lg" : size === "lg" ? "h-20 w-20 text-3xl" : "h-16 w-16 text-xl";
+
+  if (photoUrl) {
+    return (
+      <img
+        src={photoUrl}
+        alt={name}
+        className={cn("shrink-0 rounded-lg border-2 border-crimson/30 object-cover", dim)}
+        onError={(e) => {
+          e.currentTarget.style.display = "none";
+          const fallback = e.currentTarget.nextElementSibling as HTMLElement | null;
+          if (fallback) fallback.classList.remove("hidden");
+        }}
+      />
+    );
+  }
+
+  return (
+    <div className={cn("flex shrink-0 items-center justify-center rounded-lg border-2 border-crimson/30 bg-crimson/10 font-bold text-crimson", dim)}>
+      {name.charAt(0)}
+    </div>
+  );
+}
+
 const ALL_TAGS: OpponentTag[] = [
   "FISH", "REG", "NITS", "LAG", "TAG", "MANIAC",
   "CALLING_STATION", "TILT_PRONE", "BLUFF_HEAVY",
   "OVERBET_FREQ", "WEAK_POSTFLOP", "STRONG_PREFLOP", "POSITIONAL_AWARE",
 ];
 
+// ─── Main content ─────────────────────────────────────────────────
+
 function IntelligenceContent() {
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [spotFilter, setSpotFilter] = useState("all");
-  const [opponents, setOpponents] = useState<OpponentNote[]>(mockOpponentNotes);
-  const [selectedOpponent, setSelectedOpponent] = useState<OpponentNote | null>(
-    mockOpponentNotes[0] ?? null,
-  );
+  const [opponents, setOpponents] = useState<OpponentNote[]>([]);
+  const [selectedOpponent, setSelectedOpponent] = useState<OpponentNote | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
+  // ── Fetch from API ──
+  const fetchOpponents = useCallback(async () => {
+    setIsLoading(true);
+    setFetchError(null);
+    try {
+      const res = await fetch("/api/opponents");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data: OpponentNote[] = await res.json();
+      setOpponents(data);
+      if (data.length > 0 && !selectedOpponent) {
+        setSelectedOpponent(data[0]);
+      }
+    } catch {
+      setFetchError("対戦相手データの読み込みに失敗しました");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchOpponents();
+  }, [fetchOpponents]);
 
   // Open form when navigated with ?register=true
   useEffect(() => {
@@ -75,7 +130,7 @@ function IntelligenceContent() {
     }
   }, [searchParams]);
 
-  // Registration form
+  // ── Registration form state ──
   const [formName, setFormName] = useState("");
   const [formSpot, setFormSpot] = useState("");
   const [formStakes, setFormStakes] = useState("100/200");
@@ -85,6 +140,7 @@ function IntelligenceContent() {
   const [formPhysical, setFormPhysical] = useState("");
   const [formBetSizing, setFormBetSizing] = useState("");
   const [formPhoto, setFormPhoto] = useState<string | undefined>();
+  const [formSaving, setFormSaving] = useState(false);
   const [formSaved, setFormSaved] = useState(false);
 
   const toggleFormTag = (tag: OpponentTag) => {
@@ -103,37 +159,50 @@ function IntelligenceContent() {
     setFormPhoto(undefined);
   };
 
-  const handleFormSave = () => {
-    if (!formName.trim()) return;
+  const handleFormSave = async () => {
+    if (!formName.trim() || formSaving) return;
 
-    // Create new opponent note and add to list immediately
-    const newOpponent: OpponentNote = {
-      id: `opp-${Date.now()}`,
-      opponentName: formName.trim(),
-      spotId: formSpot || "roots",
-      tags: formTags,
-      notes: formNotes,
-      stakes: formStakes,
-      skillRating: formSkill,
-      physicalDescription: formPhysical || undefined,
-      betSizingNotes: formBetSizing || undefined,
-      encounters: [],
-      lastSeen: new Date().toISOString().split("T")[0],
-      createdBy: "p1",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    setFormSaving(true);
+    try {
+      const res = await fetch("/api/opponents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          opponentName: formName.trim(),
+          spotId: formSpot || "roots",
+          tags: formTags,
+          notes: formNotes,
+          stakes: formStakes,
+          skillRating: formSkill,
+          physicalDescription: formPhysical || null,
+          betSizingNotes: formBetSizing || null,
+          photoUrl: formPhoto || null,
+          createdBy: "p1",
+        }),
+      });
 
-    setOpponents((prev) => [newOpponent, ...prev]);
-    setSelectedOpponent(newOpponent);
-    setFormSaved(true);
-    resetForm();
-    setTimeout(() => {
-      setFormSaved(false);
-      setShowForm(false);
-    }, 1500);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const newOpponent: OpponentNote = await res.json();
+
+      // Immediately prepend to list
+      setOpponents((prev) => [newOpponent, ...prev]);
+      setSelectedOpponent(newOpponent);
+      setFormSaved(true);
+      resetForm();
+
+      setTimeout(() => {
+        setFormSaved(false);
+        setShowForm(false);
+      }, 1500);
+    } catch {
+      setFetchError("登録に失敗しました。再度お試しください。");
+    } finally {
+      setFormSaving(false);
+    }
   };
 
+  // ── Filtering ──
   const filtered = opponents.filter((note) => {
     if (spotFilter !== "all" && note.spotId !== spotFilter) return false;
     if (searchQuery) {
@@ -141,12 +210,15 @@ function IntelligenceContent() {
       return (
         note.opponentName.toLowerCase().includes(q) ||
         note.notes.toLowerCase().includes(q) ||
-        note.tags.some((t) => OPPONENT_TAG_LABELS[t].toLowerCase().includes(q))
+        note.tags.some((t) =>
+          (OPPONENT_TAG_LABELS[t] || t).toLowerCase().includes(q),
+        )
       );
     }
     return true;
   });
 
+  // ── Render ──
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -170,6 +242,17 @@ function IntelligenceContent() {
           </Button>
         </div>
       </div>
+
+      {/* Error banner */}
+      {fetchError && (
+        <div className="flex items-center gap-2 rounded-md border border-crimson/30 bg-crimson/10 p-3 text-sm text-crimson">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          {fetchError}
+          <Button variant="ghost" size="sm" className="ml-auto h-6 text-xs" onClick={fetchOpponents}>
+            再読み込み
+          </Button>
+        </div>
+      )}
 
       {/* Registration Form */}
       {showForm && (
@@ -256,8 +339,14 @@ function IntelligenceContent() {
               </div>
             </div>
 
-            <Button className="w-full" onClick={handleFormSave} disabled={!formName.trim()}>
-              {formSaved ? "登録しました！" : "対戦相手を登録"}
+            <Button className="w-full" onClick={handleFormSave} disabled={!formName.trim() || formSaving}>
+              {formSaving ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />保存中...</>
+              ) : formSaved ? (
+                "登録しました！"
+              ) : (
+                "対戦相手を登録"
+              )}
             </Button>
           </CardContent>
         </Card>
@@ -284,184 +373,239 @@ function IntelligenceContent() {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-5">
-        {/* Left: Wanted List */}
-        <div className="space-y-2 lg:col-span-2 relative">
-          {filtered.map((note) => {
-            const spot = getSpot(note.spotId);
-            const isSelected = selectedOpponent?.id === note.id;
-            const wins = note.encounters.filter((e) => e.result === "win").length;
-            const losses = note.encounters.filter((e) => e.result === "loss").length;
+      {/* Loading state */}
+      {isLoading && (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-emerald" />
+        </div>
+      )}
 
-            return (
-              <button type="button" key={note.id}
-                className={cn(
-                  "w-full rounded-lg border p-4 text-left transition-all cursor-pointer",
-                  isSelected ? "border-crimson bg-crimson/5" : "hover:border-crimson/30",
-                )}
-                onClick={() => setSelectedOpponent(note)}>
-                <div className="flex items-start gap-3">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border-2 border-crimson/30 bg-crimson/10 text-lg font-bold text-crimson">
-                    {note.opponentName.charAt(0)}
-                  </div>
-                  <div className="min-w-0 flex-1 space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-sm truncate">{note.opponentName}</span>
-                      <SkillStars rating={note.skillRating} />
+      {/* Main content — list + detail */}
+      {!isLoading && (
+        <div className="grid gap-6 lg:grid-cols-5">
+          {/* Left: Wanted List */}
+          <div className="space-y-2 lg:col-span-2 relative">
+            {filtered.length > 0 ? (
+              filtered.map((note) => {
+                const spot = getSpot(note.spotId);
+                const isSelected = selectedOpponent?.id === note.id;
+                const wins = note.encounters.filter((e) => e.result === "win").length;
+                const losses = note.encounters.filter((e) => e.result === "loss").length;
+
+                return (
+                  <button type="button" key={note.id}
+                    className={cn(
+                      "w-full rounded-lg border p-4 text-left transition-all cursor-pointer",
+                      isSelected ? "border-crimson bg-crimson/5" : "hover:border-crimson/30",
+                    )}
+                    onClick={() => setSelectedOpponent(note)}>
+                    <div className="flex items-start gap-3">
+                      {/* Avatar with photo fallback */}
+                      {note.photoUrl ? (
+                        <img
+                          src={note.photoUrl}
+                          alt={note.opponentName}
+                          className="h-12 w-12 shrink-0 rounded-lg border-2 border-crimson/30 object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                            const fallback = e.currentTarget.nextElementSibling as HTMLElement | null;
+                            if (fallback) fallback.classList.remove("hidden");
+                          }}
+                        />
+                      ) : null}
+                      <div className={cn(
+                        "flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border-2 border-crimson/30 bg-crimson/10 text-lg font-bold text-crimson",
+                        note.photoUrl && "hidden",
+                      )}>
+                        {note.opponentName.charAt(0)}
+                      </div>
+
+                      <div className="min-w-0 flex-1 space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-sm truncate">{note.opponentName}</span>
+                          <SkillStars rating={note.skillRating} />
+                        </div>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {note.tags.slice(0, 3).map((tag) => (
+                            <Badge key={tag} variant="outline" className={cn("text-[10px]", OPPONENT_TAG_COLORS[tag])}>
+                              {OPPONENT_TAG_LABELS[tag]}
+                            </Badge>
+                          ))}
+                        </div>
+                        <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                          {spot && (<span className="inline-flex items-center gap-0.5"><MapPin className="h-2.5 w-2.5" />{spot.shortName}</span>)}
+                          <span className="font-number">{note.stakes}</span>
+                          <span className="text-emerald">W{wins}</span>
+                          <span className="text-crimson">L{losses}</span>
+                        </div>
+                      </div>
+                      <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
                     </div>
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      {note.tags.slice(0, 3).map((tag) => (
-                        <Badge key={tag} variant="outline" className={cn("text-[10px]", OPPONENT_TAG_COLORS[tag])}>
-                          {OPPONENT_TAG_LABELS[tag]}
-                        </Badge>
-                      ))}
-                    </div>
-                    <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
-                      {spot && (<span className="inline-flex items-center gap-0.5"><MapPin className="h-2.5 w-2.5" />{spot.shortName}</span>)}
-                      <span className="font-number">{note.stakes}</span>
-                      <span className="text-emerald">W{wins}</span>
-                      <span className="text-crimson">L{losses}</span>
-                    </div>
-                  </div>
-                  <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
-                </div>
+                  </button>
+                );
+              })
+            ) : opponents.length === 0 ? (
+              /* Completely empty — no opponents registered yet */
+              <div className="rounded-lg border border-dashed p-12 text-center space-y-3">
+                <UserCircle className="mx-auto h-10 w-10 text-muted-foreground/40" />
+                <p className="text-sm font-medium text-muted-foreground">
+                  まだ登録がありません
+                </p>
+                <p className="text-xs text-muted-foreground/70">
+                  「新規登録」ボタンまたは下の＋ボタンから最初の対戦相手を登録しましょう
+                </p>
+                <Button variant="outline" size="sm" onClick={() => setShowForm(true)}>
+                  <Plus className="mr-1 h-3.5 w-3.5" />最初の対戦相手を登録
+                </Button>
+              </div>
+            ) : (
+              /* Filter returned nothing */
+              <div className="rounded-lg border border-dashed p-8 text-center">
+                <p className="text-sm text-muted-foreground">該当する対戦相手がいません</p>
+              </div>
+            )}
+
+            {/* Floating "+" button */}
+            {!showForm && (
+              <button
+                type="button"
+                onClick={() => setShowForm(true)}
+                className="fixed bottom-24 right-6 md:absolute md:bottom-4 md:right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full border-2 border-crimson bg-crimson text-white transition-transform hover:scale-110"
+                aria-label="新規登録"
+              >
+                <Plus className="h-6 w-6" />
               </button>
-            );
-          })}
-          {filtered.length === 0 && (
-            <div className="rounded-lg border border-dashed p-8 text-center">
-              <p className="text-sm text-muted-foreground">該当する対戦相手がいません</p>
-            </div>
-          )}
+            )}
+          </div>
 
-          {/* Floating "+" button */}
-          {!showForm && (
-            <button
-              type="button"
-              onClick={() => setShowForm(true)}
-              className="fixed bottom-24 right-6 md:absolute md:bottom-4 md:right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full border-2 border-crimson bg-crimson text-white transition-transform hover:scale-110"
-              aria-label="新規登録"
-            >
-              <Plus className="h-6 w-6" />
-            </button>
-          )}
-        </div>
-
-        {/* Right: Detail */}
-        <div className="space-y-4 lg:col-span-3">
-          {selectedOpponent ? (
-            <>
-              <Card>
-                <CardHeader className="pb-3">
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg border-2 border-crimson/40 bg-crimson/10 text-3xl font-bold text-crimson">
-                      {selectedOpponent.opponentName.charAt(0)}
-                    </div>
-                    <div className="flex-1 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-xl">{selectedOpponent.opponentName}</CardTitle>
-                        <SkillStars rating={selectedOpponent.skillRating} />
-                      </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {selectedOpponent.tags.map((tag) => (
-                          <Badge key={tag} variant="outline" className={cn("text-[10px]", OPPONENT_TAG_COLORS[tag])}>
-                            #{OPPONENT_TAG_LABELS[tag]}
-                          </Badge>
-                        ))}
-                      </div>
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        {getSpot(selectedOpponent.spotId) && (
+          {/* Right: Detail */}
+          <div className="space-y-4 lg:col-span-3">
+            {selectedOpponent ? (
+              <>
+                <Card>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start gap-4">
+                      <OpponentAvatar
+                        name={selectedOpponent.opponentName}
+                        photoUrl={selectedOpponent.photoUrl}
+                        size="lg"
+                      />
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-xl">{selectedOpponent.opponentName}</CardTitle>
+                          <SkillStars rating={selectedOpponent.skillRating} />
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {selectedOpponent.tags.map((tag) => (
+                            <Badge key={tag} variant="outline" className={cn("text-[10px]", OPPONENT_TAG_COLORS[tag])}>
+                              #{OPPONENT_TAG_LABELS[tag]}
+                            </Badge>
+                          ))}
+                        </div>
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                          {getSpot(selectedOpponent.spotId) && (
+                            <span className="inline-flex items-center gap-1">
+                              <MapPin className="h-3 w-3" />{getSpot(selectedOpponent.spotId)!.name}
+                            </span>
+                          )}
+                          <span className="font-number">{selectedOpponent.stakes}</span>
                           <span className="inline-flex items-center gap-1">
-                            <MapPin className="h-3 w-3" />{getSpot(selectedOpponent.spotId)!.name}
+                            <Clock className="h-3 w-3" />最終: {selectedOpponent.lastSeen}
                           </span>
-                        )}
-                        <span className="font-number">{selectedOpponent.stakes}</span>
-                        <span className="inline-flex items-center gap-1">
-                          <Clock className="h-3 w-3" />最終: {selectedOpponent.lastSeen}
-                        </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {selectedOpponent.notes && (
-                    <div className="rounded-lg border p-4 space-y-1">
-                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">戦略メモ</p>
-                      <p className="text-sm leading-relaxed">{selectedOpponent.notes}</p>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {selectedOpponent.notes && (
+                      <div className="rounded-lg border p-4 space-y-1">
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">戦略メモ</p>
+                        <p className="text-sm leading-relaxed">{selectedOpponent.notes}</p>
+                      </div>
+                    )}
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {selectedOpponent.physicalDescription && (
+                        <div className="rounded-lg border p-4 space-y-1">
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                            <User className="h-3 w-3" />身体的特徴
+                          </p>
+                          <p className="text-sm leading-relaxed">{selectedOpponent.physicalDescription}</p>
+                        </div>
+                      )}
+                      {selectedOpponent.betSizingNotes && (
+                        <div className="rounded-lg border p-4 space-y-1">
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                            <Eye className="h-3 w-3" />ベットサイズ傾向
+                          </p>
+                          <p className="text-sm leading-relaxed">{selectedOpponent.betSizingNotes}</p>
+                        </div>
+                      )}
                     </div>
-                  )}
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    {selectedOpponent.physicalDescription && (
-                      <div className="rounded-lg border p-4 space-y-1">
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-                          <User className="h-3 w-3" />身体的特徴
-                        </p>
-                        <p className="text-sm leading-relaxed">{selectedOpponent.physicalDescription}</p>
-                      </div>
-                    )}
-                    {selectedOpponent.betSizingNotes && (
-                      <div className="rounded-lg border p-4 space-y-1">
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-                          <Eye className="h-3 w-3" />ベットサイズ傾向
-                        </p>
-                        <p className="text-sm leading-relaxed">{selectedOpponent.betSizingNotes}</p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
 
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-muted-foreground" />同卓ログ
+                      <Badge variant="secondary" className="font-number text-[10px]">
+                        {selectedOpponent.encounters.length} 件
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {selectedOpponent.encounters.length > 0 ? (
+                      <div className="space-y-0">
+                        {selectedOpponent.encounters.map((enc, i) => {
+                          const encSpot = getSpot(enc.spotId);
+                          return (
+                            <div key={`${enc.date}-${i}`}
+                              className="flex items-center gap-3 border-b border-border/50 py-2.5 last:border-0">
+                              <ResultIcon result={enc.result} />
+                              <span className="font-number text-xs text-muted-foreground w-20 shrink-0">{enc.date}</span>
+                              {encSpot && (<span className="spot-badge shrink-0"><MapPin className="h-2 w-2" />{encSpot.shortName}</span>)}
+                              <span className="font-number text-[10px] text-muted-foreground shrink-0">{enc.stakes}</span>
+                              {enc.note && (<span className="text-xs text-muted-foreground truncate">{enc.note}</span>)}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="py-4 text-center text-sm text-muted-foreground">まだ同卓記録がありません</p>
+                    )}
+                  </CardContent>
+                </Card>
+              </>
+            ) : (
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-muted-foreground" />同卓ログ
-                    <Badge variant="secondary" className="font-number text-[10px]">
-                      {selectedOpponent.encounters.length} 件
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {selectedOpponent.encounters.length > 0 ? (
-                    <div className="space-y-0">
-                      {selectedOpponent.encounters.map((enc, i) => {
-                        const encSpot = getSpot(enc.spotId);
-                        return (
-                          <div key={`${enc.date}-${i}`}
-                            className="flex items-center gap-3 border-b border-border/50 py-2.5 last:border-0">
-                            <ResultIcon result={enc.result} />
-                            <span className="font-number text-xs text-muted-foreground w-20 shrink-0">{enc.date}</span>
-                            {encSpot && (<span className="spot-badge shrink-0"><MapPin className="h-2 w-2" />{encSpot.shortName}</span>)}
-                            <span className="font-number text-[10px] text-muted-foreground shrink-0">{enc.stakes}</span>
-                            {enc.note && (<span className="text-xs text-muted-foreground truncate">{enc.note}</span>)}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <p className="py-4 text-center text-sm text-muted-foreground">まだ同卓記録がありません</p>
-                  )}
+                <CardContent className="flex h-96 items-center justify-center">
+                  <div className="text-center">
+                    <Crosshair className="mx-auto h-8 w-8 text-muted-foreground" />
+                    <p className="mt-3 text-sm text-muted-foreground">
+                      {opponents.length === 0
+                        ? "対戦相手を登録すると、ここに詳細が表示されます"
+                        : "左のリストから対戦相手を選択してください"}
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
-            </>
-          ) : (
-            <Card>
-              <CardContent className="flex h-96 items-center justify-center">
-                <div className="text-center">
-                  <Crosshair className="mx-auto h-8 w-8 text-muted-foreground" />
-                  <p className="mt-3 text-sm text-muted-foreground">左のリストから対戦相手を選択してください</p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
 
+// ─── Page export with Suspense boundary ───────────────────────────
+
 export default function IntelligencePage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-sm text-muted-foreground">読み込み中...</div>}>
+    <Suspense fallback={
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-emerald" />
+      </div>
+    }>
       <IntelligenceContent />
     </Suspense>
   );
