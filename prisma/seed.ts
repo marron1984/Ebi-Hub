@@ -172,6 +172,7 @@ async function main() {
   const users = [
     {
       id: "p1",
+      username: "oniku",
       name: "おにく",
       role: "admin",
       status: "on-fire",
@@ -181,6 +182,7 @@ async function main() {
     },
     {
       id: "p2",
+      username: "taka",
       name: "タカ",
       role: "member",
       status: "active",
@@ -190,6 +192,7 @@ async function main() {
     },
     {
       id: "p3",
+      username: "bathromocchi",
       name: "バスロもっちバイヤグラ",
       role: "member",
       status: "active",
@@ -199,6 +202,7 @@ async function main() {
     },
     {
       id: "p4",
+      username: "nose",
       name: "ノセ",
       role: "member",
       status: "on-fire",
@@ -208,6 +212,7 @@ async function main() {
     },
     {
       id: "p5",
+      username: "benza",
       name: "便座",
       role: "member",
       status: "cooling-down",
@@ -217,16 +222,17 @@ async function main() {
     },
     {
       id: "p6",
+      username: "loxonin_rikuto",
       name: "ロキソニン陸斗",
       role: "member",
       status: "active",
       joinedAt: new Date("2024-06-20"),
       teamId: team.id,
       primarySpotId: "jackpot",
-      notes: "Represent KADOMA-Tobari. Respect",
     },
     {
       id: "p7",
+      username: "dafuku",
       name: "だーふく",
       role: "member",
       status: "resting",
@@ -236,6 +242,7 @@ async function main() {
     },
     {
       id: "p8",
+      username: "korokke",
       name: "コロッケ",
       role: "member",
       status: "active",
@@ -245,6 +252,7 @@ async function main() {
     },
     {
       id: "p9",
+      username: "paipan_connie",
       name: "ぱいぱんコニー",
       role: "member",
       status: "active",
