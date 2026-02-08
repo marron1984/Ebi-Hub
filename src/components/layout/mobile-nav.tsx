@@ -4,19 +4,19 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
-  Compass,
   PenLine,
+  Plus,
   Crosshair,
-  Users,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
   { name: "ホーム", href: "/dashboard", icon: LayoutDashboard },
-  { name: "情報", href: "/events", icon: Compass },
-  { name: "記録", href: "/hands/new", icon: PenLine, center: true },
+  { name: "ハンド", href: "/hands", icon: PenLine },
+  { name: "記録", href: "/hands/new", icon: Plus, center: true },
   { name: "対戦", href: "/intelligence", icon: Crosshair },
-  { name: "チーム", href: "/members", icon: Users },
+  { name: "設定", href: "/settings", icon: Settings },
 ];
 
 export function MobileNav() {
