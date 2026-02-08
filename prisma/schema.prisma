@@ -217,6 +217,12 @@ model OpponentNote {
   stakes       String
   lastSeen     String
 
+  // Enhanced intelligence fields
+  skillRating         Int     @default(3) // 1-5 stars
+  physicalDescription String? // Appearance, habits, tells
+  betSizingNotes      String? // Bet sizing tendencies
+  photoUrl            String? // Uploaded photo for visual ID
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -225,7 +231,27 @@ model OpponentNote {
   createdBy String
   creator   User @relation(fields: [createdBy], references: [id])
 
+  encounters OpponentEncounter[]
+
   @@index([spotId])
+  @@index([opponentName])
+}
+
+// ===== Opponent Encounter Log =====
+model OpponentEncounter {
+  id     String @id @default(cuid())
+  date   String // YYYY-MM-DD
+  stakes String
+  result String // "win" | "loss" | "neutral"
+  note   String?
+
+  createdAt DateTime @default(now())
+
+  opponentId String
+  opponent   OpponentNote @relation(fields: [opponentId], references: [id], onDelete: Cascade)
+  spotId     String
+
+  @@index([opponentId])
 }
 
 // ===== Activity Feed =====

@@ -13,6 +13,8 @@ import { MarkdownEditor } from "@/components/poker/markdown-editor";
 import { cn } from "@/lib/utils";
 import { Save, Plus, Trash2, Send } from "lucide-react";
 import { BroadcastButton } from "@/components/share/broadcast-button";
+import { VisualTable } from "@/components/hand-recorder/visual-table";
+import type { TableAction } from "@/components/hand-recorder/visual-table";
 import type {
   GameType, Position, Street, Rank, Suit, HandTag, Card as CardType,
 } from "@/types/poker";
@@ -125,6 +127,39 @@ export default function NewHandPage() {
   const [notes, setNotes] = useState("");
   const [saved, setSaved] = useState(false);
 
+  // Visual table actions per street
+  const [streetActions, setStreetActions] = useState<Record<Street, TableAction[]>>({
+    preflop: [], flop: [], turn: [], river: [], showdown: [],
+  });
+
+  const addTableAction = (street: Street, action: TableAction) => {
+    setStreetActions((prev) => ({
+      ...prev,
+      [street]: [...prev[street], action],
+    }));
+  };
+
+  const removeTableAction = (street: Street, index: number) => {
+    setStreetActions((prev) => ({
+      ...prev,
+      [street]: prev[street].filter((_, i) => i !== index),
+    }));
+  };
+
+  // Auto-pot calculation: sum of all bet/raise/call amounts + blinds
+  const calculatePot = (street: Street): number => {
+    let pot = 1.5; // SB + BB baseline
+    const streetOrder: Street[] = ["preflop", "flop", "turn", "river", "showdown"];
+    const idx = streetOrder.indexOf(street);
+    for (let s = 0; s <= idx; s++) {
+      for (const a of streetActions[streetOrder[s]]) {
+        if (a.amount) pot += a.amount;
+        else if (a.action === "call") pot += 2; // default call 1BB each
+      }
+    }
+    return pot;
+  };
+
   const toggleTag = (tag: HandTag) => {
     setSelectedTags((prev) => prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]);
   };
@@ -206,6 +241,18 @@ export default function NewHandPage() {
                     onChange={(cards) => updateStreetData(street, "board", cards)}
                     maxCards={street === "flop" ? 3 : street === "turn" ? 4 : 5} />
                 )}
+
+                {/* Visual Table — tap positions to record actions */}
+                {street !== "showdown" && (
+                  <VisualTable
+                    heroPosition={heroPosition}
+                    actions={streetActions[street]}
+                    onAddAction={(a) => addTableAction(street, a)}
+                    onRemoveAction={(i) => removeTableAction(street, i)}
+                    potBB={calculatePot(street)}
+                  />
+                )}
+
                 {street === "showdown" && (
                   <>
                     <CardSelector label="相手ハンド" selectedCards={villainCards} onChange={setVillainCards}
