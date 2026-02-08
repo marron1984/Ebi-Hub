@@ -93,6 +93,17 @@ export async function POST(request: NextRequest) {
       include: { encounters: true },
     });
 
+    // Create Activity for team feed notification
+    await prisma.activity.create({
+      data: {
+        type: "opponent_note",
+        title: `対戦相手「${opponentName.trim()}」を登録`,
+        detail: `${spotExists.shortName} / ${stakes || "100/200"} — Lv.${skillRating ?? 3}`,
+        userId: targetUserId,
+        metadata: JSON.stringify({ opponentId: opponent.id, spotId: targetSpotId }),
+      },
+    });
+
     revalidatePath("/intelligence");
 
     return NextResponse.json(

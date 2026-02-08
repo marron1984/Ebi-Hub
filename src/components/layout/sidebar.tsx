@@ -12,6 +12,7 @@ import {
   Calendar,
   Wallet,
   Crosshair,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./theme-toggle";
@@ -26,6 +27,7 @@ const navigation = [
   { name: "対戦相手DB", href: "/intelligence", icon: Crosshair },
   { name: "資産管理", href: "/assets", icon: Wallet },
   { name: "メンバー", href: "/members", icon: Users },
+  { name: "設定", href: "/settings", icon: Settings },
 ];
 
 export function Sidebar() {

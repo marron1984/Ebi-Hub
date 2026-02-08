@@ -12,7 +12,18 @@ import { cn } from "@/lib/utils";
 import {
   Settings, User, Key, Camera, Loader2,
   CheckCircle, Shield, Crown, Eye, EyeOff,
+  DollarSign, Clock, Target, MapPin, Crosshair,
 } from "lucide-react";
+
+interface UserStats {
+  totalSessions: number;
+  totalProfitJpy: number;
+  totalHours: number;
+  hourlyJpy: number;
+  winRate: number;
+  recentSpots: string[];
+  opponentCount: number;
+}
 
 interface UserProfile {
   id: string;
@@ -22,6 +33,9 @@ interface UserProfile {
   avatar: string | null;
   role: string;
   status: string;
+  joinedAt: string;
+  primarySpotName: string | null;
+  stats: UserStats;
 }
 
 export default function SettingsPage() {
@@ -59,7 +73,7 @@ export default function SettingsPage() {
   }, [toast]);
 
   // Username validation
-  const validateUsername = async (value: string) => {
+  const validateUsername = (value: string) => {
     setUsernameError("");
     if (value.length < 2) {
       setUsernameError("2文字以上で入力してください");
@@ -179,6 +193,8 @@ export default function SettingsPage() {
   }
 
   const isAdmin = profile.role === "admin";
+  const stats = profile.stats;
+  const formatJpy = (n: number) => `${n >= 0 ? "+" : ""}¥${Math.abs(n).toLocaleString()}`;
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
@@ -189,7 +205,7 @@ export default function SettingsPage() {
         </div>
         <div>
           <h1 className="text-2xl font-bold tracking-tight">設定</h1>
-          <p className="text-sm text-muted-foreground">プロフィール・セキュリティの管理</p>
+          <p className="text-sm text-muted-foreground">プロフィール・セキュリティ・マイステータス</p>
         </div>
         {isAdmin && (
           <Badge className="ml-auto">
@@ -197,6 +213,62 @@ export default function SettingsPage() {
           </Badge>
         )}
       </div>
+
+      {/* ─── My Status Section ─── */}
+      <Card className="border-2 border-primary/20">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Target className="h-4 w-4 text-emerald" />
+            マイステータス
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <div className="rounded-lg border p-3 text-center">
+              <DollarSign className="mx-auto h-4 w-4 text-muted-foreground mb-1" />
+              <p className="text-[10px] text-muted-foreground">通算収支</p>
+              <p className={cn(
+                "font-number text-sm font-bold",
+                stats.totalProfitJpy >= 0 ? "text-emerald" : "text-crimson"
+              )}>
+                {formatJpy(stats.totalProfitJpy)}
+              </p>
+            </div>
+            <div className="rounded-lg border p-3 text-center">
+              <Clock className="mx-auto h-4 w-4 text-muted-foreground mb-1" />
+              <p className="text-[10px] text-muted-foreground">時給</p>
+              <p className="font-number text-sm font-bold">
+                {stats.totalHours > 0 ? `¥${Math.abs(stats.hourlyJpy).toLocaleString()}/h` : "-"}
+              </p>
+            </div>
+            <div className="rounded-lg border p-3 text-center">
+              <Target className="mx-auto h-4 w-4 text-muted-foreground mb-1" />
+              <p className="text-[10px] text-muted-foreground">勝率</p>
+              <p className="font-number text-sm font-bold">{stats.winRate}%</p>
+            </div>
+            <div className="rounded-lg border p-3 text-center">
+              <Crosshair className="mx-auto h-4 w-4 text-muted-foreground mb-1" />
+              <p className="text-[10px] text-muted-foreground">登録対戦相手</p>
+              <p className="font-number text-sm font-bold">{stats.opponentCount}人</p>
+            </div>
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+            <span className="font-number">{stats.totalSessions} セッション / {stats.totalHours}h</span>
+            {stats.recentSpots.length > 0 && (
+              <span className="inline-flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                主な稼働: {stats.recentSpots.join(", ")}
+              </span>
+            )}
+            {profile.primarySpotName && (
+              <Badge variant="outline" className="text-[10px]">
+                <MapPin className="mr-1 h-2.5 w-2.5" />ホーム: {profile.primarySpotName}
+              </Badge>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* ─── Avatar Section ─── */}
       <Card>
