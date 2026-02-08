@@ -19,6 +19,7 @@ export interface OpponentEncounter {
   stakes: string;
   result: "win" | "loss" | "neutral";
   note?: string;
+  createdAt: string;
 }
 
 export interface OpponentNote {
